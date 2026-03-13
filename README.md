@@ -1,5 +1,14 @@
-## Hi there 👋
+# Azamat Portfolio
 
+Personal resume and portfolio site. Built to showcase my Python Flask web apps and my tutoring experience in Chemistry Physics and Math.
+
+## Tech Stack
+* HTML5
+* CSS3
+* Hosted via GitHub Pages
+
+## Deployment
+Pushing to the main branch automatically deploys to GitHub Pages.
 <!--
 **Meowzyaa/Meowzyaa** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
