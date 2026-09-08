@@ -1,8 +1,7 @@
-# The source PDFs are ~111 MB and are exam board material, so they stay local.
-# The site works without them: every question still shows, only the
-# "open the paper" links go dead.
-past_papers/
-goals/
+# lab/ and other/ are byte-identical duplicates of the year folders
+past_papers/lab/
+past_papers/other/
+*.crdownload
 
 # scratch
 *.txt.tmp
