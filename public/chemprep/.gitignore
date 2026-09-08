@@ -1,0 +1,14 @@
+# The source PDFs are ~111 MB and are exam board material, so they stay local.
+# The site works without them: every question still shows, only the
+# "open the paper" links go dead.
+past_papers/
+goals/
+
+# scratch
+*.txt.tmp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# intermediate extraction output
+.build/
