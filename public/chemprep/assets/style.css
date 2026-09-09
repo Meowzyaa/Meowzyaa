@@ -821,3 +821,8 @@ html[data-theme="dark"] .ref-f { color: var(--clay); }
 .td-badges { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule-soft); font-size: 12.5px; color: var(--ink-2); }
 .td-badges > span { display: flex; align-items: center; gap: 8px; }
 .tour .opt:focus-visible { outline-offset: 0; }
+
+/* a tour card taller than a small laptop screen scrolls inside the overlay */
+.tour-wrap { overflow-y: auto; overscroll-behavior: contain; }
+.tour-backdrop { position: fixed; }
+.tour { margin-bottom: 12px; }
