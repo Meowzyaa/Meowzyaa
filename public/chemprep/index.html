@@ -35,9 +35,13 @@
   <div class="topbar-right">
     <a class="tb-link" href="#/goals">syllabus</a>
     <a class="tb-link" href="#/papers">papers</a>
+    <a class="tb-link" href="#/reference">reference</a>
     <a class="tb-link" href="#/review">review<span class="tb-count" id="review-count" hidden>0</span></a>
     <button class="icon-btn search-toggle" id="search-toggle" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+    </button>
+    <button class="icon-btn" id="help-btn" title="How this works" aria-label="How this works">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
     </button>
     <button class="icon-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
       <svg class="ic ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
@@ -55,6 +59,11 @@
         <div class="bar"><i id="sp-bar" style="width:0%"></i></div>
         <p id="sp-note">nothing attempted yet</p>
       </div>
+      <div class="side-tools">
+        <button class="ghost-btn" id="export-btn" title="Save your progress as a file">export</button>
+        <button class="ghost-btn" id="import-btn" title="Load progress from a file">import</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
       <button class="ghost-btn" id="reset-btn">reset progress</button>
     </div>
   </aside>
@@ -69,6 +78,7 @@
 <script src="data/questions.js"></script>
 <script src="data/objectives.js"></script>
 <script src="data/practice.js"></script>
+<script src="data/reference.js"></script>
 <script src="assets/chem.js"></script>
 <script src="assets/app.js"></script>
 </body>

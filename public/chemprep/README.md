@@ -24,6 +24,13 @@ and answer it. No build step, no dependencies, no backend.
 - **Drills.** Mixed, per topic, or against your review pile. Questions that mark themselves come
   first, unseen before seen. Keyboard: `a` to `d` to answer, `f` to flag, `enter` for next, `/` to search, `esc` to close the search or the menu.
 - **A review pile.** Anything you got wrong or flagged collects in one place.
+- **A reference (справочник).** Formulae, definitions, colour changes and the ion and gas tests from
+  the official data booklet, one section per unit, filterable, and searched by the main search box.
+  Press `r` from anywhere.
+- **A first-run tour.** Five short cards explaining the modes, marking, missing diagrams and the
+  shortcuts. Skippable, and reopened with `?` or the help button.
+- **Export and import.** Progress lives in `localStorage`, so the sidebar can save it to a file and
+  load it on another device.
 - **Deep links into the source.** Every question knows which PDF and which page it came from.
 
 Progress lives in `localStorage`, so it is per browser and never leaves the machine.
@@ -47,6 +54,7 @@ assets/style.css    warm paper, ink, one clay accent, light and dark; icons are 
 assets/chem.js      re-inserts the subscripts and superscripts pdftotext throws away
 assets/app.js       router, question cards, drills, progress
 data/topics.js      the syllabus taxonomy, taken from the yearly course calendars
+data/reference.js   the reference: formulae, definitions, ion tests (hand-edited)
 data/questions.js   the extracted past paper bank      (generated)
 data/objectives.js  the 304 learning objectives, ranked (generated)
 data/practice.js    the written practice bank          (generated)

@@ -9,6 +9,7 @@
   var UNITS = window.CHEMPREP_UNITS || [];
   var GOALS = window.CHEMPREP_OBJECTIVES || [];
   var PRACTICE = window.CHEMPREP_PRACTICE || [];
+  var REF = window.CHEMPREP_REFERENCE || [];
 
   var QBY = {};
   QS.forEach(function (q) { QBY[q.id] = q; });
@@ -49,10 +50,11 @@
         v.theme = v.theme || null;
         v.sideHidden = !!v.sideHidden;
         v.last = v.last || null;
+        v.tourSeen = !!v.tourSeen;
         return v;
       }
     } catch (e) { /* private mode, first run */ }
-    return { results: {}, notes: {}, flags: {}, theme: null, last: null };
+    return { results: {}, notes: {}, flags: {}, theme: null, last: null, tourSeen: false };
   }
 
   // where the student was last working, so the home page can offer a way back
@@ -244,6 +246,11 @@
     goals.href = '#/goals';
     goals.dataset.route = '/goals';
     nav.appendChild(goals);
+
+    var ref = el('a', 'nav-item', icon('book') + '<span class="ni-name">Reference</span>');
+    ref.href = '#/reference';
+    ref.dataset.route = '/reference';
+    nav.appendChild(ref);
 
     UNITS.forEach(function (u) {
       var g = el('div', 'nav-group');
@@ -772,7 +779,7 @@
     var hero = el('section', 'hero');
     hero.innerHTML =
       '<div class="hero-in">' +
-        '<p class="h-eyebrow">external summative assessment</p>' +
+        '<p class="hero-greet">' + esc(greeting()) + '</p>' +
         '<h1 class="display">Every past paper question,<br>filed under the topic it tests.</h1>' +
         '<p class="lede">' + QS.length + ' real questions pulled out of the NIS grade 12 chemistry papers from ' +
           yearList[0] + ' to ' + yearList[yearList.length - 1] + ', sorted into the ' +
@@ -865,6 +872,32 @@
 
     main.innerHTML = '';
     main.appendChild(frag);
+  }
+
+  // A different line each visit, keyed to the hour, with today's tally when
+  // there is one. Kept short: it is a greeting, not a pep talk.
+  var GREETS = {
+    early:     ['Early start. Kettle on, then a drill.', 'Up with the sun. Fresh head, hardest topic first.', 'Morning. The periodic table is already awake.'],
+    morning:   ['Good morning.', 'Morning. Twenty questions before lunch is a good day.', 'Good morning. Start with the topic you keep avoiding.'],
+    afternoon: ['Good afternoon.', 'Afternoon. A short drill beats a long scroll.', 'Afternoon slump? Ten quick ones will fix it.'],
+    evening:   ['Good evening.', 'Evening. Clear the review pile first, then something new.', 'Evening session. Steady beats heroic.'],
+    night:     ['Night owl.', 'Late one. Ten questions, then sleep.', 'Still up? Make it count, then rest.', 'Past midnight. The exam is in daylight, remember.']
+  };
+  function greeting() {
+    var h = new Date().getHours();
+    var b = h < 5 ? 'night' : h < 9 ? 'early' : h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 22 ? 'evening' : 'night';
+    var pool = GREETS[b];
+    var line = pool[Math.floor(Math.random() * pool.length)];
+    var start = new Date(); start.setHours(0, 0, 0, 0);
+    var n = 0, ok = 0;
+    Object.keys(S.results).forEach(function (id) {
+      var r = S.results[id];
+      if (!r || r.at < start.getTime()) return;
+      n++;
+      if (r.s === 'correct') ok++;
+    });
+    if (n) line += ' ' + n + ' answered today, ' + ok + ' right.';
+    return line;
   }
 
   function weakest() {
@@ -1276,10 +1309,121 @@
     main.appendChild(t);
   }
 
+  /* ---------------- reference ---------------- */
+
+  var refFilter = { area: 'all', q: '' };
+
+  function refItemHtml(it) {
+    return '<div class="ref-item"><b class="ref-term">' + esc(it.t) + '</b><div class="ref-body">' +
+      (it.f ? '<code class="ref-f">' + esc(it.f) + '</code>' : '') +
+      '<p>' + esc(it.d) + '</p></div></div>';
+  }
+
+  function refMatches(q) {
+    var t = q.toLowerCase().trim();
+    var out = [];
+    REF.forEach(function (sec) {
+      sec.items.forEach(function (it) {
+        if (!t || (it.t + ' ' + (it.f || '') + ' ' + it.d + ' ' + sec.title).toLowerCase().indexOf(t) > -1) {
+          out.push({ sec: sec, it: it });
+        }
+      });
+    });
+    return out;
+  }
+
+  function viewReference() {
+    markNav('/reference');
+    main.innerHTML = '';
+    main.appendChild(el('div', 'crumb', '<a href="#/">Overview</a> <span>/</span> <span>Reference</span>'));
+
+    var head = el('header');
+    head.innerHTML =
+      '<p class="h-eyebrow">справочник</p>' +
+      '<h1 class="display" style="font-size:clamp(26px,3.4vw,36px)">Reference</h1>' +
+      '<p class="lede">The formulae, definitions and observations the papers keep asking for, in the wording the mark schemes want. ' +
+      'The ion and gas tests are transcribed from the official data booklet.</p>';
+    main.appendChild(head);
+
+    var tools = el('div', 'ref-tools');
+    var box = el('input', 'ref-search');
+    box.type = 'search';
+    box.placeholder = 'Filter: Hess, buffer, precipitate, iodoform';
+    box.value = refFilter.q;
+    box.setAttribute('aria-label', 'Filter the reference');
+    tools.appendChild(box);
+    var areas = [['all', 'everything'], ['physical', 'physical'], ['inorganic', 'inorganic'], ['organic', 'organic'], ['analysis', 'analysis']];
+    areas.forEach(function (a) {
+      var c = el('button', 'chip' + (refFilter.area === a[0] ? ' on' : ''), a[1]);
+      c.setAttribute('aria-pressed', String(refFilter.area === a[0]));
+      c.addEventListener('click', function () {
+        refFilter.area = a[0];
+        Array.prototype.forEach.call(tools.querySelectorAll('.chip'), function (x) {
+          var on = x === c;
+          x.classList.toggle('on', on);
+          x.setAttribute('aria-pressed', String(on));
+        });
+        renderRef();
+      });
+      tools.appendChild(c);
+    });
+    main.appendChild(tools);
+
+    var toc = el('nav', 'ref-toc');
+    toc.setAttribute('aria-label', 'Sections');
+    main.appendChild(toc);
+
+    var body = el('div');
+    main.appendChild(body);
+
+    function renderRef() {
+      var t = refFilter.q.toLowerCase().trim();
+      body.innerHTML = '';
+      toc.innerHTML = '';
+      var shown = 0;
+      REF.forEach(function (sec) {
+        if (refFilter.area !== 'all' && sec.area !== refFilter.area) return;
+        var items = sec.items.filter(function (it) {
+          return !t || (it.t + ' ' + (it.f || '') + ' ' + it.d).toLowerCase().indexOf(t) > -1;
+        });
+        if (!items.length) return;
+        shown += items.length;
+
+        var link = el('a', null, esc(sec.title));
+        link.href = '#/reference';
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          var target = $('#ref-' + sec.id);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        toc.appendChild(link);
+
+        var s = el('section', 'ref-sec');
+        s.id = 'ref-' + sec.id;
+        var n = questionsFor(sec.topic).length;
+        var t2 = TOPIC[sec.topic];
+        s.innerHTML = '<div class="sec-head"><div><h2 class="sec">' + esc(sec.title) + '</h2>' +
+          (t2 ? '<p class="unit-note"><a href="#/topic/' + sec.topic + '">' + n + ' question' + (n === 1 ? '' : 's') + ' on this in the archive</a></p>' : '') +
+          '</div></div>' +
+          '<div class="ref-list">' + items.map(refItemHtml).join('') + '</div>';
+        body.appendChild(s);
+      });
+      if (!shown) body.appendChild(el('div', 'ref-empty', 'Nothing matches. Try a shorter word.'));
+    }
+
+    var timer = null;
+    box.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { refFilter.q = box.value; renderRef(); }, 120);
+    });
+    renderRef();
+  }
+
   function viewSearch(term) {
     markNav('');
     var t = term.toLowerCase().trim();
     var hits = QS.filter(function (q) { return q._search.indexOf(t) > -1; }).slice(0, 60);
+    var rhits = refMatches(t).slice(0, 6);
     main.innerHTML = '';
     var head = el('header');
     head.innerHTML =
@@ -1287,8 +1431,17 @@
       '<h1 class="display" style="font-size:clamp(24px,3vw,32px)">' + hits.length +
         (hits.length === 60 ? '+' : '') + ' match' + (hits.length === 1 ? '' : 'es') + ' for &ldquo;' + esc(term) + '&rdquo;</h1>';
     main.appendChild(head);
+    if (rhits.length) {
+      var rs = el('div', 'sec-head search-ref');
+      rs.innerHTML = '<div><h2 class="sec">From the reference</h2></div><a class="srclink" href="#/reference">open the reference</a>';
+      main.appendChild(rs);
+      var rl = el('div', 'ref-list');
+      rl.style.maxWidth = '920px';
+      rl.innerHTML = rhits.map(function (m) { return refItemHtml(m.it); }).join('');
+      main.appendChild(rl);
+    }
     if (!hits.length) {
-      main.appendChild(el('div', 'empty', '<b>Nothing found</b><span>Try a formula, a reagent or a topic name.</span>'));
+      if (!rhits.length) main.appendChild(el('div', 'empty', '<b>Nothing found</b><span>Try a formula, a reagent or a topic name.</span>'));
       return;
     }
     var list = el('div', 'qlist');
@@ -1324,8 +1477,94 @@
     if (parts[0] === 'goal') return viewGoal(parts.slice(1).join('/'));
     if (parts[0] === 'review') return viewReview();
     if (parts[0] === 'papers') return viewPapers();
+    if (parts[0] === 'reference') return viewReference();
     if (parts[0] === 'search') return viewSearch(decodeURIComponent(parts.slice(1).join('/')));
     return viewHome();
+  }
+
+  /* ---------------- first-run tour ---------------- */
+
+  var TOUR = [
+    { icon: 'house', title: 'Real questions, filed by topic',
+      body: 'Every question here comes from an actual NIS paper, 2014 to 2025, sorted into the 25 units of the syllabus. Pick a topic in the sidebar, or start a mixed drill and let it pick for you.' },
+    { icon: 'check', title: 'How marking works',
+      body: 'Questions with a "key" mark themselves the moment you answer. Older papers have no answer key in the archive, so those you check against the paper and mark yourself. Structured questions give you a work pad and, where it exists, the official mark scheme behind a reveal.' },
+    { icon: 'out', title: 'Some diagrams did not survive',
+      body: 'The papers were converted from PDF to text, and graphs, spectra and drawn structures do not come through. A "has a diagram" badge means you need the original: the link under the question opens the exact page of the paper.' },
+    { icon: 'list', title: 'Syllabus and reference',
+      body: 'Syllabus lists all 304 learning objectives, ranked by how often the papers test them, with written practice and worked solutions. Reference (справочник) holds the formulae, definitions and ion tests in the words the mark schemes want.' },
+    { icon: 'flag', title: 'Review pile and shortcuts',
+      body: 'Anything you get wrong or flag lands in Review, so the pile is your to-do list. Keys: a to d to answer, f to flag, enter for next, / to search, r for the reference, ? to reopen this tour.' }
+  ];
+
+  function showTour() {
+    if ($('.tour-wrap')) return;
+    var opener = document.activeElement;
+    var wrap = el('div', 'tour-wrap');
+    var back = el('div', 'tour-backdrop');
+    var dlg = el('div', 'tour');
+    dlg.setAttribute('role', 'dialog');
+    dlg.setAttribute('aria-modal', 'true');
+    dlg.setAttribute('aria-labelledby', 'tour-title');
+    wrap.appendChild(back);
+    wrap.appendChild(dlg);
+    var i = 0;
+
+    function close() {
+      S.tourSeen = true;
+      save();
+      document.removeEventListener('keydown', keys, true);
+      wrap.classList.add('out');
+      setTimeout(function () { wrap.remove(); }, 200);
+      if (opener && opener.focus) opener.focus();
+    }
+    function render() {
+      var s = TOUR[i];
+      var last = i === TOUR.length - 1;
+      dlg.innerHTML =
+        '<div class="tour-icon">' + icon(s.icon) + '</div>' +
+        '<p class="tour-step">' + (i + 1) + ' of ' + TOUR.length + '</p>' +
+        '<h2 id="tour-title">' + esc(s.title) + '</h2>' +
+        '<p>' + esc(s.body) + '</p>' +
+        '<div class="tour-dots" aria-hidden="true">' + TOUR.map(function (_, k) { return '<i class="' + (k === i ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
+        '<div class="tour-actions">' +
+          '<button class="btn small ghost" data-act="skip">' + (last ? 'Close' : 'Skip') + '</button>' +
+          '<span class="spacer"></span>' +
+          (i > 0 ? '<button class="btn small" data-act="back">Back</button>' : '') +
+          '<button class="btn small primary" data-act="next">' + (last ? 'Start' : 'Next') + '</button>' +
+        '</div>';
+      $('[data-act="next"]', dlg).focus();
+    }
+    function step(d) {
+      var n = i + d;
+      if (n >= TOUR.length) return close();
+      if (n < 0) return;
+      i = n;
+      render();
+    }
+    dlg.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act]');
+      if (!b) return;
+      if (b.dataset.act === 'skip') close();
+      else if (b.dataset.act === 'back') step(-1);
+      else step(1);
+    });
+    back.addEventListener('click', close);
+    function keys(e) {
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+      else if (e.key === 'Tab') {
+        // keep focus inside the dialog
+        var f = dlg.querySelectorAll('button');
+        var first = f[0], lastB = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastB.focus(); }
+        else if (!e.shiftKey && document.activeElement === lastB) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', keys, true);
+    document.body.appendChild(wrap);
+    render();
   }
 
   /* ---------------- boot ---------------- */
@@ -1389,12 +1628,53 @@
 
   $('#reset-btn').addEventListener('click', function () {
     if (!confirm('Clear every answer, note and flag on this device?')) return;
-    S = { results: {}, notes: {}, flags: {}, theme: S.theme, sideHidden: S.sideHidden };
+    S = { results: {}, notes: {}, flags: {}, theme: S.theme, sideHidden: S.sideHidden, tourSeen: true, last: null };
     save();
     refreshChrome();
     route();
     toast('progress cleared');
   });
+
+  // progress lives in this browser only, so a file is the way to carry it to
+  // another device or keep it safe
+  $('#export-btn').addEventListener('click', function () {
+    var blob = new Blob([JSON.stringify({ results: S.results, notes: S.notes, flags: S.flags, exported: new Date().toISOString() }, null, 1)],
+      { type: 'application/json' });
+    var a = el('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'chemprep-progress.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast('progress saved to a file');
+  });
+  var importFile = $('#import-file');
+  $('#import-btn').addEventListener('click', function () { importFile.click(); });
+  importFile.addEventListener('change', function () {
+    var f = importFile.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var v = JSON.parse(reader.result);
+        if (!v || typeof v.results !== 'object') throw new Error('shape');
+        Object.keys(v.results || {}).forEach(function (k) { S.results[k] = v.results[k]; });
+        Object.keys(v.notes || {}).forEach(function (k) { S.notes[k] = v.notes[k]; });
+        Object.keys(v.flags || {}).forEach(function (k) { S.flags[k] = v.flags[k]; });
+        save();
+        refreshChrome();
+        route();
+        toast('progress imported');
+      } catch (e) {
+        toast('that file is not a chemprep export');
+      }
+    };
+    reader.readAsText(f);
+    importFile.value = '';
+  });
+
+  $('#help-btn').addEventListener('click', showTour);
 
   var searchBox = $('#search');
   var searchTimer = null;
@@ -1426,7 +1706,9 @@
       if (narrow.matches) setSearch(true); else searchBox.focus();
       return;
     }
-    if (typing) return;
+    if (typing || $('.tour-wrap')) return;
+    if (e.key === '?') { e.preventDefault(); showTour(); return; }
+    if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) { location.hash = '#/reference'; return; }
     if (!drill) return;
     var k = e.key.toLowerCase();
     if ('abcd'.indexOf(k) > -1 && drill._pick) { e.preventDefault(); drill._pick(k.toUpperCase()); }
@@ -1447,4 +1729,5 @@
   refreshChrome();
   window.addEventListener('hashchange', route);
   route();
+  if (!S.tourSeen) setTimeout(showTour, 500);
 })();
