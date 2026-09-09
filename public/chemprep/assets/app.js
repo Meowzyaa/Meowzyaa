@@ -123,7 +123,10 @@
     inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
     again: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
     book: '<path d="M12 5v16"/><path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/>',
-    check: '<path d="M20 6 9 17l-5-5"/>'
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+    menu: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>'
   };
   function icon(name) {
     return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
@@ -1484,29 +1487,65 @@
 
   /* ---------------- first-run tour ---------------- */
 
+  // Each step points at a real control (a spotlight plus an arrow), except the
+  // demo, which is a live question so the marking states can be tried safely.
   var TOUR = [
-    { icon: 'house', title: 'Real questions, filed by topic',
-      body: 'Every question here comes from an actual NIS paper, 2014 to 2025, sorted into the 25 units of the syllabus. Pick a topic in the sidebar, or start a mixed drill and let it pick for you.' },
-    { icon: 'check', title: 'How marking works',
-      body: 'Questions with a "key" mark themselves the moment you answer. Older papers have no answer key in the archive, so those you check against the paper and mark yourself. Structured questions give you a work pad and, where it exists, the official mark scheme behind a reveal.' },
-    { icon: 'out', title: 'Some diagrams did not survive',
-      body: 'The papers were converted from PDF to text, and graphs, spectra and drawn structures do not come through. A "has a diagram" badge means you need the original: the link under the question opens the exact page of the paper.' },
-    { icon: 'list', title: 'Syllabus and reference',
-      body: 'Syllabus lists all 304 learning objectives, ranked by how often the papers test them, with written practice and worked solutions. Reference (справочник) holds the formulae, definitions and ion tests in the words the mark schemes want.' },
-    { icon: 'flag', title: 'Review pile and shortcuts',
-      body: 'Anything you get wrong or flag lands in Review, so the pile is your to-do list. Keys: a to d to answer, f to flag, enter for next, / to search, r for the reference, ? to reopen this tour.' }
+    { target: '#nav', place: 'right', icon: 'house', title: 'Topics live in the sidebar',
+      body: 'The 25 units of the syllabus, each with the number of past paper questions filed under it. Above them: the overview, a mixed drill that picks questions for you, the syllabus objectives and the reference.',
+      mobileTarget: '#side-toggle', mobileIcon: 'menu', mobileTitle: 'Topics live behind this button',
+      mobileBody: 'It opens the 25 units of the syllabus, each with the number of past paper questions filed under it, plus the mixed drill, the syllabus objectives and the reference.' },
+    { target: '#search', mobileTarget: '#search-toggle', icon: 'search', title: 'Search anything',
+      body: 'A formula, a reagent, a topic, a phrase from a mark scheme. Results include the reference entries. Press / to jump here from anywhere.' },
+    { demo: true, icon: 'check', title: 'Try one',
+      body: 'A real question from the 2024 paper. Pick an answer and see how marking looks. Nothing you do here is recorded.' },
+    { target: '.tb-link[href="#/review"]', icon: 'flag', title: 'The review pile',
+      body: 'Everything you get wrong or flag lands here, newest first, and you can drill just the pile. Clearing it is the whole game.' },
+    { target: '.tb-link[href="#/goals"]', icon: 'list', title: 'Syllabus objectives',
+      body: 'All 304 learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it.',
+      mobileBody: 'All 304 learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it. On a phone it sits near the top of the menu.' },
+    { target: '.tb-link[href="#/reference"]', icon: 'book', title: 'Reference, the справочник',
+      body: 'Formulae, definitions, colour changes and the data booklet ion tests, in the wording mark schemes want. Press r from anywhere.' },
+    { target: '#help-btn', icon: 'help', title: 'Shortcuts, and this tour',
+      body: 'a to d answer, f flag, enter next, / search, r reference, ? reopens this tour. It will not appear on its own again.' }
   ];
+
+  var DEMO = {
+    tag: '2024 p1 q9',
+    stem: 'There are four isomeric alcohols with the molecular formula C₄H₁₀O. One isomer, alcohol Q, does not react with acidified potassium dichromate(VI) solution. Name the alcohol Q.',
+    options: { A: 'butan-1-ol', B: 'butan-2-ol', C: '2-methylpropan-1-ol', D: '2-methylpropan-2-ol' },
+    answer: 'D',
+    why: 'Q is a tertiary alcohol: the carbon carrying the OH has no hydrogen, so dichromate cannot oxidise it and stays orange.'
+  };
+
+  function demoHtml() {
+    return '<div class="tour-demo">' +
+      '<div class="td-head"><span class="q-tag p1">' + DEMO.tag + '</span><span class="pill marks">1 mark</span><span class="pill key">key</span></div>' +
+      '<p class="td-stem">' + esc(DEMO.stem) + '</p>' +
+      '<div class="opts">' + ['A', 'B', 'C', 'D'].map(function (k) {
+        return '<button class="opt" data-pick="' + k + '"><span class="k">' + k + '</span><span>' + esc(DEMO.options[k]) + '</span></button>';
+      }).join('') + '</div>' +
+      '<p class="td-note">Green is the answer. Red is a wrong pick. Wrong answers go to your review pile.</p>' +
+      '<div class="td-badges">' +
+        '<span><span class="pill key">key</span> marks itself as soon as you answer</span>' +
+        '<span><span class="pill nokey">no key</span> older paper, check the paper and mark yourself</span>' +
+        '<span><span class="pill fig">has a diagram</span> open the paper page linked under the question</span>' +
+      '</div>' +
+    '</div>';
+  }
 
   function showTour() {
     if ($('.tour-wrap')) return;
     var opener = document.activeElement;
     var wrap = el('div', 'tour-wrap');
     var back = el('div', 'tour-backdrop');
+    var spot = el('div', 'tour-spot');
     var dlg = el('div', 'tour');
+    var arrow = el('i', 'tour-arrow');
     dlg.setAttribute('role', 'dialog');
     dlg.setAttribute('aria-modal', 'true');
     dlg.setAttribute('aria-labelledby', 'tour-title');
     wrap.appendChild(back);
+    wrap.appendChild(spot);
     wrap.appendChild(dlg);
     var i = 0;
 
@@ -1514,18 +1553,80 @@
       S.tourSeen = true;
       save();
       document.removeEventListener('keydown', keys, true);
+      window.removeEventListener('resize', position);
       wrap.classList.add('out');
       setTimeout(function () { wrap.remove(); }, 200);
       if (opener && opener.focus) opener.focus();
     }
+
+    function stepTarget(s) {
+      var sel = narrow.matches && s.mobileTarget ? s.mobileTarget : s.target;
+      if (!sel) return null;
+      var t = $(sel);
+      // a control hidden at this width cannot be pointed at
+      if (!t || (t.offsetParent === null && getComputedStyle(t).position !== 'fixed')) return null;
+      return t;
+    }
+
+    // Puts the spotlight over the target and the card beside it: to the right
+    // of tall targets, otherwise below, otherwise above, otherwise centred.
+    function position() {
+      var s = TOUR[i];
+      var t = stepTarget(s);
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var cw = dlg.offsetWidth, ch = dlg.offsetHeight;
+      var m = 14, pad = 6;
+      arrow.className = 'tour-arrow';
+      if (!t) {
+        wrap.classList.remove('spot');
+        dlg.style.left = Math.max(12, (vw - cw) / 2) + 'px';
+        dlg.style.top = Math.max(12, (vh - ch) / 2) + 'px';
+        return;
+      }
+      var r = t.getBoundingClientRect();
+      wrap.classList.add('spot');
+      spot.style.left = (r.left - pad) + 'px';
+      spot.style.top = (r.top - pad) + 'px';
+      spot.style.width = (r.width + pad * 2) + 'px';
+      spot.style.height = (r.height + pad * 2) + 'px';
+
+      var left, top;
+      if (s.place === 'right' && r.right + m + cw <= vw) {
+        left = r.right + m;
+        top = Math.min(Math.max(r.top, 12), vh - ch - 12);
+        arrow.classList.add('left');
+        arrow.style.top = Math.min(Math.max(r.top + r.height / 2 - top - 7, 16), ch - 30) + 'px';
+        arrow.style.left = '';
+      } else if (r.bottom + m + ch <= vh) {
+        top = r.bottom + m;
+        left = Math.min(Math.max(r.left + r.width / 2 - cw / 2, 12), vw - cw - 12);
+        arrow.classList.add('top');
+        arrow.style.left = Math.min(Math.max(r.left + r.width / 2 - left - 7, 16), cw - 30) + 'px';
+        arrow.style.top = '';
+      } else if (r.top - m - ch >= 0) {
+        top = r.top - m - ch;
+        left = Math.min(Math.max(r.left + r.width / 2 - cw / 2, 12), vw - cw - 12);
+        arrow.classList.add('bottom');
+        arrow.style.left = Math.min(Math.max(r.left + r.width / 2 - left - 7, 16), cw - 30) + 'px';
+        arrow.style.top = '';
+      } else {
+        left = Math.max(12, (vw - cw) / 2);
+        top = Math.max(12, (vh - ch) / 2);
+      }
+      dlg.style.left = left + 'px';
+      dlg.style.top = top + 'px';
+    }
+
     function render() {
       var s = TOUR[i];
       var last = i === TOUR.length - 1;
+      var mobile = narrow.matches;
       dlg.innerHTML =
-        '<div class="tour-icon">' + icon(s.icon) + '</div>' +
+        '<div class="tour-icon">' + icon(mobile && s.mobileIcon ? s.mobileIcon : s.icon) + '</div>' +
         '<p class="tour-step">' + (i + 1) + ' of ' + TOUR.length + '</p>' +
-        '<h2 id="tour-title">' + esc(s.title) + '</h2>' +
-        '<p>' + esc(s.body) + '</p>' +
+        '<h2 id="tour-title">' + esc(mobile && s.mobileTitle ? s.mobileTitle : s.title) + '</h2>' +
+        '<p>' + esc(mobile && s.mobileBody ? s.mobileBody : s.body) + '</p>' +
+        (s.demo ? demoHtml() : '') +
         '<div class="tour-dots" aria-hidden="true">' + TOUR.map(function (_, k) { return '<i class="' + (k === i ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
         '<div class="tour-actions">' +
           '<button class="btn small ghost" data-act="skip">' + (last ? 'Close' : 'Skip') + '</button>' +
@@ -1533,7 +1634,9 @@
           (i > 0 ? '<button class="btn small" data-act="back">Back</button>' : '') +
           '<button class="btn small primary" data-act="next">' + (last ? 'Start' : 'Next') + '</button>' +
         '</div>';
-      $('[data-act="next"]', dlg).focus();
+      dlg.appendChild(arrow);
+      position();
+      $('[data-act="next"]', dlg).focus({ preventScroll: true });
     }
     function step(d) {
       var n = i + d;
@@ -1542,7 +1645,21 @@
       i = n;
       render();
     }
+    function demoPick(k) {
+      var right = k === DEMO.answer;
+      Array.prototype.forEach.call(dlg.querySelectorAll('.tour-demo .opt'), function (b) {
+        b.disabled = true;
+        if (b.dataset.pick === DEMO.answer) b.classList.add('right');
+        if (b.dataset.pick === k && !right) b.classList.add('mistake');
+      });
+      var note = $('.td-note', dlg);
+      note.innerHTML = (right ? '<b>Right.</b> ' : '<b>Not this time.</b> ') + esc(DEMO.why) +
+        (right ? ' A right answer colours the card green and fills the topic bar.' : ' A wrong answer colours the card red and adds it to your review pile.');
+      position();
+    }
     dlg.addEventListener('click', function (e) {
+      var o = e.target.closest('[data-pick]');
+      if (o && !o.disabled) return demoPick(o.dataset.pick);
       var b = e.target.closest('[data-act]');
       if (!b) return;
       if (b.dataset.act === 'skip') close();
@@ -1550,21 +1667,26 @@
       else step(1);
     });
     back.addEventListener('click', close);
+    spot.addEventListener('click', close);
     function keys(e) {
       if (e.key === 'Escape') { e.preventDefault(); close(); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
       else if (e.key === 'Tab') {
         // keep focus inside the dialog
-        var f = dlg.querySelectorAll('button');
+        var f = dlg.querySelectorAll('button:not(:disabled)');
         var first = f[0], lastB = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastB.focus(); }
         else if (!e.shiftKey && document.activeElement === lastB) { e.preventDefault(); first.focus(); }
       }
     }
     document.addEventListener('keydown', keys, true);
+    window.addEventListener('resize', position);
     document.body.appendChild(wrap);
     render();
+    // the entrance animation is decoration: once it has had its time, the
+    // final state is set outright so nothing depends on it having played
+    setTimeout(function () { dlg.style.animation = 'none'; back.style.animation = 'none'; }, 400);
   }
 
   /* ---------------- boot ---------------- */
@@ -1729,5 +1851,16 @@
   refreshChrome();
   window.addEventListener('hashchange', route);
   route();
-  if (!S.tourSeen) setTimeout(showTour, 500);
+  // The tour shows itself once. It is marked seen the moment it opens, and it
+  // never opens on its own where nothing can be remembered (private windows),
+  // so it cannot come back on every visit.
+  var canRemember = (function () {
+    try { localStorage.setItem('chemprep.probe', '1'); localStorage.removeItem('chemprep.probe'); return true; }
+    catch (e) { return false; }
+  })();
+  if (!S.tourSeen && canRemember) {
+    S.tourSeen = true;
+    save();
+    setTimeout(showTour, 600);
+  }
 })();

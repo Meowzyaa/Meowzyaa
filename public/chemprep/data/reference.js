@@ -85,7 +85,8 @@ window.CHEMPREP_REFERENCE = [
   ]},
 
   { id: 'energetics', title: 'Energetics and entropy', area: 'physical', topic: 'energetics', items: [
-    { t: 'Standard conditions', d: '100 kPa (often quoted as 1 atm), 298 K, solutions at 1 mol dm⁻³, substances in their standard states.' },
+    { t: 'Enthalpy change, ΔH', d: 'The heat energy change of a reaction carried out at constant pressure, in kJ mol⁻¹. Negative for exothermic reactions (heat given out, products lower in energy than reactants), positive for endothermic.' },
+    { t: 'Standard conditions', d: '100 kPa (often quoted as 1 atm), 298 K, solutions at 1 mol dm⁻³, substances in their standard states. A standard enthalpy change, ΔH°, is one measured under these conditions.' },
     { t: 'Standard enthalpy change of formation, ΔH°f', d: 'The enthalpy change when one mole of a compound is formed from its elements in their standard states under standard conditions. ΔH°f of an element in its standard state is zero.' },
     { t: 'Standard enthalpy change of combustion, ΔH°c', d: 'The enthalpy change when one mole of a substance is completely burned in oxygen under standard conditions.' },
     { t: 'Standard enthalpy change of neutralisation', d: 'The enthalpy change when one mole of water is formed by the reaction of an acid with an alkali under standard conditions. About −57 kJ mol⁻¹ for any strong acid with any strong base; less exothermic for weak acids because some energy goes into dissociating them.' },
@@ -104,7 +105,9 @@ window.CHEMPREP_REFERENCE = [
 
   { id: 'kinetics', title: 'Reaction kinetics', area: 'physical', topic: 'kinetics', items: [
     { t: 'Rate of reaction', d: 'The change in concentration of a reactant or product per unit time, mol dm⁻³ s⁻¹. On a concentration–time graph the rate is the gradient of the tangent.' },
-    { t: 'Rate equation', f: 'rate = k [A]ᵐ [B]ⁿ', d: 'm and n are the orders with respect to A and B, found only by experiment, never from the equation. Overall order = m + n. k is the rate constant; it increases with temperature and with a catalyst.' },
+    { t: 'Rate equation', f: 'rate = k [A]ᵐ [B]ⁿ', d: 'm and n are the orders with respect to A and B, found only by experiment, never from the equation. Overall order = m + n.' },
+    { t: 'Order of reaction', d: 'The power to which the concentration of a species is raised in the rate equation. The overall order is the sum of the individual orders.' },
+    { t: 'Rate constant, k', d: 'The proportionality constant in the rate equation. It is constant at a given temperature, increases with temperature, and is larger with a catalyst; its units depend on the overall order.' },
     { t: 'Units of k', d: 'Zero order: mol dm⁻³ s⁻¹. First order: s⁻¹. Second order: dm³ mol⁻¹ s⁻¹. Third order: dm⁶ mol⁻² s⁻¹. Rearrange k = rate / concentrations and cancel.' },
     { t: 'Finding orders from initial rates', d: 'Change one concentration at a time. Doubling it leaves the rate unchanged: zero order. Doubles the rate: first order. Quadruples it: second order.' },
     { t: 'Orders from graphs', d: 'Rate against concentration: horizontal line zero order, straight line through the origin first order, curve second order. Concentration against time: straight line zero order; curve with a constant half-life first order; curve with increasing half-lives second order.' },
