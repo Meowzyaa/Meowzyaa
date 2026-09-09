@@ -94,8 +94,41 @@
 
   function paperLabel(q) { return 'p' + q.paper; }
 
-  var CHEVRON = '<span class="q-chev" aria-hidden="true">' +
-    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>';
+  // Slides a card body open or shut by animating a measured height, then hands
+  // the height back to the content so folds inside can still grow.
+  function slide(body, open) {
+    clearTimeout(body._t);
+    if (open) {
+      body.style.height = '0px';
+      void body.offsetHeight;
+      body.style.height = body.scrollHeight + 'px';
+      body._t = setTimeout(function () { body.style.height = 'auto'; }, 300);
+    } else {
+      body.style.height = body.offsetHeight + 'px';
+      void body.offsetHeight;
+      body.style.height = '0px';
+    }
+  }
+
+  // Lucide icons (MIT), inlined so the site keeps working offline
+  var ICONS = {
+    house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    zap: '<path d="M15.914 4a1.5 1.5 0 0 0-2.474-1.561l-9 9A1.5 1.5 0 0 0 5.5 14h4.002a.5.5 0 0 1 .471.666L8.086 20a1.5 1.5 0 0 0 2.475 1.56l9-9A1.5 1.5 0 0 0 18.5 10h-3.997a.5.5 0 0 1-.472-.667z"/>',
+    list: '<path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/>',
+    flag: '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>',
+    out: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
+    inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    again: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    book: '<path d="M12 5v16"/><path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>'
+  };
+  function icon(name) {
+    return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>';
+  }
+
+  var CHEVRON = '<span class="q-chev" aria-hidden="true">' + icon('chevron') + '</span>';
 
   // Renders question text with the flattened chart and table fragments moved
   // into a fold, so the prose reads as prose.
@@ -196,18 +229,18 @@
     var nav = $('#nav');
     nav.innerHTML = '';
 
-    var home = el('a', 'nav-item', '<span class="ni-name">Overview</span>');
+    var home = el('a', 'nav-item', icon('house') + '<span class="ni-name">Overview</span>');
     home.href = '#/';
     home.dataset.route = '/';
     nav.appendChild(home);
 
-    var drill = el('a', 'nav-item', '<span class="ni-name">Mixed drill</span>');
+    var drill = el('a', 'nav-item', icon('zap') + '<span class="ni-name">Mixed drill</span>');
     drill.href = '#/drill/all';
     drill.dataset.route = '/drill/all';
     nav.appendChild(drill);
 
     var goals = el('a', 'nav-item',
-      '<span class="ni-name">Syllabus objectives</span><span class="ni-n">' + GOALS.length + '</span>');
+      icon('list') + '<span class="ni-name">Syllabus objectives</span><span class="ni-n">' + GOALS.length + '</span>');
     goals.href = '#/goals';
     goals.dataset.route = '/goals';
     nav.appendChild(goals);
@@ -270,21 +303,23 @@
     var wrap = el('div', 'q-actions');
     var src = pdfHref(q.src, q.page);
     if (src) {
-      var a = el('a', 'srclink', '&#8599; question paper, page ' + q.page);
+      var a = el('a', 'srclink', icon('out') + 'question paper, page ' + q.page);
       a.href = src; a.target = '_blank'; a.rel = 'noopener';
       wrap.appendChild(a);
     }
     if (q.ms) {
-      var m = el('a', 'srclink', '&#8599; mark scheme');
+      var m = el('a', 'srclink', icon('out') + 'mark scheme');
       m.href = pdfHref(q.ms); m.target = '_blank'; m.rel = 'noopener';
       wrap.appendChild(m);
     }
     wrap.appendChild(el('span', 'spacer'));
 
-    var flag = el('button', 'btn small', S.flags[q.id] ? 'flagged' : 'flag for later');
+    var flag = el('button', 'btn small', icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag for later'));
+    flag.setAttribute('aria-pressed', String(!!S.flags[q.id]));
     flag.addEventListener('click', function () {
       if (S.flags[q.id]) delete S.flags[q.id]; else S.flags[q.id] = true;
-      flag.textContent = S.flags[q.id] ? 'flagged' : 'flag for later';
+      flag.innerHTML = icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag for later');
+      flag.setAttribute('aria-pressed', String(!!S.flags[q.id]));
       save(); refreshChrome();
     });
     wrap.appendChild(flag);
@@ -403,9 +438,10 @@
     card.appendChild(head);
 
     var body = el('div', 'q-body');
-    body.hidden = true;
-    var inner = el('div', 'q-body-in');
-    body.appendChild(inner);
+    var clip = el('div', 'q-body-in');
+    var inner = el('div', 'q-body-pad');
+    clip.appendChild(inner);
+    body.appendChild(clip);
     card.appendChild(body);
 
     var built = false;
@@ -481,15 +517,16 @@
     }
 
     head.addEventListener('click', function () {
-      var open = body.hidden;
+      var open = !card.classList.contains('is-open');
       if (open) build();
-      body.hidden = !open;
       card.classList.toggle('is-open', open);
       head.setAttribute('aria-expanded', String(open));
+      slide(body, open);
     });
 
     if (opts.open) {
-      build(); body.hidden = false; card.classList.add('is-open');
+      build(); card.classList.add('is-open');
+      body.style.height = 'auto';
       head.setAttribute('aria-expanded', 'true');
     }
     return card;
@@ -525,9 +562,10 @@
     card.appendChild(head);
 
     var body = el('div', 'q-body');
-    body.hidden = true;
-    var inner = el('div', 'q-body-in');
-    body.appendChild(inner);
+    var clip = el('div', 'q-body-in');
+    var inner = el('div', 'q-body-pad');
+    clip.appendChild(inner);
+    body.appendChild(clip);
     card.appendChild(body);
 
     var built = false;
@@ -580,14 +618,15 @@
     }
 
     head.addEventListener('click', function () {
-      var open = body.hidden;
+      var open = !card.classList.contains('is-open');
       if (open) build();
-      body.hidden = !open;
       card.classList.toggle('is-open', open);
       head.setAttribute('aria-expanded', String(open));
+      slide(body, open);
     });
     if (opts.open) {
-      build(); body.hidden = false; card.classList.add('is-open');
+      build(); card.classList.add('is-open');
+      body.style.height = 'auto';
       head.setAttribute('aria-expanded', 'true');
     }
     return card;
@@ -748,9 +787,9 @@
           '<div class="stat"><b>' + o.ok + '</b><span>you have right</span></div>' +
         '</div>' +
         '<div class="cta-row">' +
-          '<a class="btn primary" href="#/drill/all">Start a mixed drill</a>' +
-          '<a class="btn" href="#/goals">Work the syllabus</a>' +
-          '<a class="btn" href="#/papers">Browse the papers</a>' +
+          '<a class="btn primary" href="#/drill/all">' + icon('zap') + 'Start a mixed drill</a>' +
+          '<a class="btn" href="#/goals">' + icon('list') + 'Work the syllabus</a>' +
+          '<a class="btn" href="#/papers">' + icon('book') + 'Browse the papers</a>' +
         '</div>' +
       '</div>';
     frag.appendChild(hero);
@@ -1083,11 +1122,11 @@
     }
 
     // a question worth coming back to should be one press away, mid-drill
-    var flagBtn = el('button', 'btn small', S.flags[q.id] ? 'flagged' : 'flag');
+    var flagBtn = el('button', 'btn small', icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag'));
     flagBtn.setAttribute('aria-pressed', String(!!S.flags[q.id]));
     function toggleFlag() {
       if (S.flags[q.id]) delete S.flags[q.id]; else S.flags[q.id] = true;
-      flagBtn.textContent = S.flags[q.id] ? 'flagged' : 'flag';
+      flagBtn.innerHTML = icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag');
       flagBtn.setAttribute('aria-pressed', String(!!S.flags[q.id]));
       toast(S.flags[q.id] ? 'added to your review pile' : 'flag removed');
       save(); refreshChrome();
@@ -1097,12 +1136,12 @@
 
     var src = pdfHref(q.src, q.page);
     if (src) {
-      var a = el('a', 'srclink', '&#8599; page ' + q.page + ' of the paper');
+      var a = el('a', 'srclink', icon('out') + 'page ' + q.page + ' of the paper');
       a.href = src; a.target = '_blank'; a.rel = 'noopener';
       foot.appendChild(a);
     }
     if (q.ms) {
-      var m = el('a', 'srclink', '&#8599; mark scheme');
+      var m = el('a', 'srclink', icon('out') + 'mark scheme');
       m.href = pdfHref(q.ms); m.target = '_blank'; m.rel = 'noopener';
       foot.appendChild(m);
     }
@@ -1144,7 +1183,7 @@
           ? 'Middling. The ones you missed are sitting in your review pile.'
           : 'Rough round. Read the mark schemes for the ones you missed before drilling again.') + '</p>';
     var row = el('div', 'cta-row');
-    var again = el('button', 'btn primary', 'Go again');
+    var again = el('button', 'btn primary', icon('again') + 'Go again');
     again.addEventListener('click', function () { viewDrill(location.hash.split('/')[2] || 'all'); });
     row.appendChild(again);
     var rev = el('a', 'btn', 'Review what you missed');
@@ -1174,7 +1213,7 @@
     main.appendChild(head);
 
     if (!qs.length) {
-      main.appendChild(el('div', 'empty', '<b>Empty pile</b><span>Nothing wrong and nothing flagged.</span>'));
+      main.appendChild(el('div', 'empty', icon('inbox') + '<b>Empty pile</b><span>Nothing wrong and nothing flagged.</span>'));
       return;
     }
 
@@ -1228,9 +1267,9 @@
         '<td class="mono">' + r.n + '</td>' +
         '<td class="mono">' + r.marks + '</td>' +
         '<td>' + (r.ms
-          ? '<a class="srclink" target="_blank" rel="noopener" href="' + pdfHref(r.ms) + '">&#8599; open</a>'
+          ? '<a class="srclink" target="_blank" rel="noopener" href="' + pdfHref(r.ms) + '">' + icon('out') + 'mark scheme</a>'
           : '<span class="muted">not in archive</span>') + '</td>' +
-        '<td>' + (q ? '<a class="srclink" target="_blank" rel="noopener" href="' + q + '">&#8599; question paper</a>' : '') + '</td>';
+        '<td>' + (q ? '<a class="srclink" target="_blank" rel="noopener" href="' + q + '">' + icon('out') + 'question paper</a>' : '') + '</td>';
       tb.appendChild(tr);
     });
     t.appendChild(tb);
@@ -1264,6 +1303,10 @@
     var h = location.hash.replace(/^#/, '') || '/';
     var parts = h.split('/').filter(Boolean);
     window.scrollTo(0, 0);
+    // restart the enter animation on every navigation
+    main.classList.remove('enter');
+    void main.offsetWidth;
+    main.classList.add('enter');
 
     if (!parts.length) return viewHome();
     if (parts[0] === 'topic') return viewTopic(parts[1]);
@@ -1287,8 +1330,15 @@
 
   /* ---------------- boot ---------------- */
 
-  function applyTheme(t) {
-    document.documentElement.dataset.theme = t;
+  var themeTimer = null;
+  function applyTheme(t, animate) {
+    var root = document.documentElement;
+    if (animate) {
+      root.classList.add('theming');
+      clearTimeout(themeTimer);
+      themeTimer = setTimeout(function () { root.classList.remove('theming'); }, 350);
+    }
+    root.dataset.theme = t;
     S.theme = t;
     save();
   }
@@ -1334,7 +1384,7 @@
   });
 
   $('#theme-toggle').addEventListener('click', function () {
-    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark', true);
   });
 
   $('#reset-btn').addEventListener('click', function () {

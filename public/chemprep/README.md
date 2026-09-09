@@ -43,7 +43,7 @@ the data ships as plain `.js` rather than `.json` (no fetch, so no CORS problem)
 
 ```
 index.html          the whole app shell
-assets/style.css    warm paper, ink, clay orange, muted pastels, light and dark
+assets/style.css    warm paper, ink, one clay accent, light and dark; icons are Lucide (MIT)
 assets/chem.js      re-inserts the subscripts and superscripts pdftotext throws away
 assets/app.js       router, question cards, drills, progress
 data/topics.js      the syllabus taxonomy, taken from the yearly course calendars
