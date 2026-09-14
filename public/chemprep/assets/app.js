@@ -9,6 +9,7 @@
   var UNITS = window.CHEMPREP_UNITS || [];
   var GOALS = window.CHEMPREP_OBJECTIVES || [];
   var PRACTICE = window.CHEMPREP_PRACTICE || [];
+  var FIGURES = window.CHEMPREP_FIGURES || {};
   var REF = window.CHEMPREP_REFERENCE || [];
 
   var QBY = {};
@@ -128,6 +129,10 @@
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
     menu: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>'
   };
+  ICONS.info = '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>';
+  ICONS.send = '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>';
+  ICONS.bug = '<path d="M12 20v-9"/><path d="M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z"/><path d="M14.12 3.88 16 2"/><path d="M21 21a4 4 0 0 0-3.81-4"/><path d="M21 5a4 4 0 0 1-3.55 3.97"/><path d="M22 13h-4"/><path d="M3 21a4 4 0 0 1 3.81-4"/><path d="M3 5a4 4 0 0 0 3.55 3.97"/><path d="M6 13H2"/><path d="m8 2 1.88 1.88"/><path d="M9 7.13V6a3 3 0 1 1 6 0v1.13"/>';
+
   function icon(name) {
     return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>';
@@ -135,12 +140,30 @@
 
   var CHEVRON = '<span class="q-chev" aria-hidden="true">' + icon('chevron') + '</span>';
 
+  // The diagram cropped straight out of the source PDF, where we have one.
+  function figureFor(q) {
+    var f = FIGURES[q.id];
+    if (!f) return null;
+    var fig = el('figure', 'qfig');
+    var img = el('img');
+    img.src = 'figures/' + q.id + '.png';
+    img.alt = 'Diagram from ' + q.year + ' paper ' + q.paper + ' question ' + q.n;
+    img.loading = 'lazy';
+    img.width = f.w;
+    img.height = f.h;
+    fig.appendChild(img);
+    fig.appendChild(el('figcaption', null, 'from the original paper, page ' + q.page));
+    return fig;
+  }
+
   // Renders question text with the flattened chart and table fragments moved
   // into a fold, so the prose reads as prose.
   function questionText(q, src) {
     var split = splitFigureText(src);
     var wrap = el('div');
     wrap.appendChild(el('div', 'q-full', chem(split.prose)));
+    var fig = figureFor(q);
+    if (fig) wrap.appendChild(fig);
     if (split.figure) {
       var det = el('details', 'figtext');
       det.innerHTML = '<summary>text lifted out of the diagram</summary>' +
@@ -255,6 +278,11 @@
     ref.dataset.route = '/reference';
     nav.appendChild(ref);
 
+    var about = el('a', 'nav-item', icon('info') + '<span class="ni-name">About and contact</span>');
+    about.href = '#/about';
+    about.dataset.route = '/about';
+    nav.appendChild(about);
+
     UNITS.forEach(function (u) {
       var g = el('div', 'nav-group');
       g.appendChild(el('h4', null, esc(u.name)));
@@ -309,6 +337,60 @@
     return b;
   }
 
+  /* ---------------- bug reports ---------------- */
+
+  var CONTACT = { url: 'https://t.me/roarinx', handle: '@roarinx' };
+
+  // Telegram links cannot carry a message to a person, so the report is put on
+  // the clipboard and the chat opens alongside it, ready to paste.
+  function reportText(q) {
+    var lines = ['chemprep bug report', ''];
+    if (q) {
+      lines.push('question: ' + q.id + ' (' + q.year + ' paper ' + q.paper + ' question ' + q.n + ')');
+      if (TOPIC[q.topic]) lines.push('topic: ' + TOPIC[q.topic].name);
+    }
+    lines.push('page: ' + location.href);
+    lines.push('');
+    lines.push('what is wrong:');
+    lines.push('');
+    lines.push('what it should be (if you know):');
+    return lines.join('\n');
+  }
+
+  function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) { /* fall through to the old way */ }
+    var ta = el('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+
+  // A real link rather than window.open, so the new tab is never popup-blocked.
+  function reportLink(q, label, cls) {
+    var a = el('a', cls || 'srclink', icon('bug') + (label || 'report a problem'));
+    a.href = CONTACT.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.addEventListener('click', function () {
+      toast(copyText(reportText(q))
+        ? 'report copied, paste it into the chat'
+        : 'opening the chat, describe the problem there');
+    });
+    return a;
+  }
+
   function sourceLinks(q) {
     var wrap = el('div', 'q-actions');
     var src = pdfHref(q.src, q.page);
@@ -322,6 +404,7 @@
       m.href = pdfHref(q.ms); m.target = '_blank'; m.rel = 'noopener';
       wrap.appendChild(m);
     }
+    wrap.appendChild(reportLink(q, 'report'));
     wrap.appendChild(el('span', 'spacer'));
 
     var flag = el('button', 'btn small', icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag for later'));
@@ -435,7 +518,7 @@
     meta += '<span class="pill marks">' + q.marks + (q.marks === 1 ? ' mark' : ' marks') + '</span>';
     // structured questions nearly always carry a diagram, so the badge only
     // earns its place on multiple choice
-    if (q.figure && q.kind !== 'structured') meta += '<span class="pill fig">has a diagram</span>';
+    if (q.figure && !FIGURES[q.id] && q.kind !== "structured") meta += '<span class="pill fig">has a diagram</span>';
     if (q.kind !== 'structured') {
       meta += q.answer ? '<span class="pill key">key</span>' : '<span class="pill nokey">no key</span>';
     }
@@ -459,7 +542,7 @@
       if (built) return;
       built = true;
 
-      if (q.figure && q.kind !== 'structured') {
+      if (q.figure && !FIGURES[q.id] && q.kind !== "structured") {
         inner.appendChild(el('p', 'note warn',
           'This one leans on a diagram or table that does not survive as text. Open the question paper page below to see it.'));
       }
@@ -1086,12 +1169,15 @@
     kick.innerHTML =
       '<span class="q-tag ' + paperLabel(q) + '">' + q.year + ' p' + q.paper + ' q' + q.n + '</span>' +
       '<span class="pill marks">' + q.marks + (q.marks === 1 ? ' mark' : ' marks') + '</span>' +
-      (q.figure && q.kind !== 'structured' ? '<span class="pill fig">has a diagram</span>' : '') +
+      (q.figure && !FIGURES[q.id] && q.kind !== 'structured'
+        ? '<span class="pill fig">has a diagram</span>' : '') +
       '<span class="pill">' + esc(TOPIC[q.topic] ? TOPIC[q.topic].name : q.topic) + '</span>';
     card.appendChild(kick);
 
     var dSplit = splitFigureText(q.kind === 'structured' ? q.body : q.stem);
     card.appendChild(el('p', 'drill-stem', chem(dSplit.prose)));
+    var dFig = figureFor(q);
+    if (dFig) card.appendChild(dFig);
     if (dSplit.figure) {
       var dDet = el('details', 'figtext');
       dDet.innerHTML = '<summary>text lifted out of the diagram</summary>' +
@@ -1099,7 +1185,7 @@
       card.appendChild(dDet);
     }
 
-    if (q.figure) {
+    if (q.figure && !FIGURES[q.id]) {
       card.appendChild(el('p', 'note warn', q.kind === 'structured'
         ? 'Work this one from the paper page below, where the diagrams and tables are.'
         : 'Part of this question is a diagram. Open the paper page to see it.'));
@@ -1312,6 +1398,77 @@
     main.appendChild(t);
   }
 
+  /* ---------------- about ---------------- */
+
+  function viewAbout() {
+    markNav('/about');
+    var years = {};
+    QS.forEach(function (q) { years[q.year] = 1; });
+    var ys = Object.keys(years).sort();
+    var keyed = QS.filter(function (q) { return q.answer; }).length;
+
+    main.innerHTML = '';
+    main.appendChild(el('div', 'crumb', '<a href="#/">Overview</a> <span>/</span> <span>About</span>'));
+
+    var head = el('header');
+    head.innerHTML =
+      '<p class="h-eyebrow">about chemprep</p>' +
+      '<h1 class="display" style="font-size:clamp(26px,3.4vw,36px)">Why this exists</h1>' +
+      '<p class="lede">The NIS grade 12 chemistry ESA is predictable in one useful way: the same ideas come back ' +
+      'year after year. The past papers prove it, but they sit in a pile of PDFs sorted by year, and nobody revises by year. ' +
+      'You revise by topic. This site does the sorting, so you can pick the unit you are weakest in and see every question ' +
+      'that has actually been asked about it.</p>';
+    main.appendChild(head);
+
+    var body = el('div', 'about');
+
+    body.innerHTML =
+      '<section class="about-sec">' +
+        '<h2 class="sec">What it is for</h2>' +
+        '<p>Practising on the real thing. Every question in the topic browser comes from a real NIS paper, ' + ys[0] + ' to ' +
+          ys[ys.length - 1] + ', ' + QS.length + ' in total, with its year, paper and page so you can check it against the original. ' +
+          'The syllabus mode turns the same archive round: it starts from the ' + GOALS.length +
+          ' learning objectives in the course calendars and shows which ones the exam leans on hardest.</p>' +
+        '<ul class="about-list">' +
+          '<li><b>Find the gaps.</b> Drill a topic and the wrong answers collect in your review pile.</li>' +
+          '<li><b>Learn the marking.</b> ' + keyed + ' multiple choice questions mark themselves, and the structured ones carry ' +
+            'official mark schemes and examiner comments wherever the archive has them.</li>' +
+          '<li><b>Go past the archive.</b> Written practice covers the highest-yield objectives, with a worked solution for every question.</li>' +
+        '</ul>' +
+      '</section>' +
+
+      '<section class="about-sec">' +
+        '<h2 class="sec">Worth knowing</h2>' +
+        '<ul class="about-list">' +
+          '<li><b>It is unofficial.</b> This is an independent study tool, not a product of NIS or the Center for Pedagogical Measurements.</li>' +
+          '<li><b>Nothing is guessed.</b> Where a paper has no answer key in the archive, the question is self marked rather than given an invented answer.</li>' +
+          '<li><b>Written practice is labelled.</b> Anything tagged <span class="q-tag written">written</span> was written for this site, ' +
+            'is never mixed into your past paper score, and is not an exam board question.</li>' +
+          '<li><b>Extraction is not perfect.</b> Questions were pulled out of PDFs automatically, so a formula, a diagram or a topic ' +
+            'label can occasionally be wrong. If you spot one, please say so.</li>' +
+          '<li><b>Your progress stays with you.</b> It lives in this browser only. Use export in the sidebar to move it to another device.</li>' +
+        '</ul>' +
+      '</section>';
+    main.appendChild(body);
+
+    var card = el('section', 'contact-card');
+    card.innerHTML =
+      '<div class="contact-copy">' +
+        '<p class="h-eyebrow">bugs, wrong answers, ideas</p>' +
+        '<h2 class="sec">Found a mistake?</h2>' +
+        '<p>Message ' + esc(CONTACT.handle) + ' on Telegram. The most useful reports name the question (its tag, like ' +
+          '<span class="mono">2024 p1 q39</span>), say what looks wrong, and what you think it should be. ' +
+          'The fastest way is the <b>report</b> link under any question, which copies all of that for you.</p>' +
+      '</div>';
+    var actions = el('div', 'contact-actions');
+    var tg = el('a', 'btn primary', icon('send') + 'Message ' + esc(CONTACT.handle));
+    tg.href = CONTACT.url; tg.target = '_blank'; tg.rel = 'noopener';
+    actions.appendChild(tg);
+    actions.appendChild(reportLink(null, 'Copy a report template', 'btn'));
+    card.appendChild(actions);
+    main.appendChild(card);
+  }
+
   /* ---------------- reference ---------------- */
 
   var refFilter = { area: 'all', q: '' };
@@ -1481,6 +1638,7 @@
     if (parts[0] === 'review') return viewReview();
     if (parts[0] === 'papers') return viewPapers();
     if (parts[0] === 'reference') return viewReference();
+    if (parts[0] === 'about') return viewAbout();
     if (parts[0] === 'search') return viewSearch(decodeURIComponent(parts.slice(1).join('/')));
     return viewHome();
   }

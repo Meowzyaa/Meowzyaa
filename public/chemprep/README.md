@@ -31,6 +31,12 @@ and answer it. No build step, no dependencies, no backend.
   shortcuts. Skippable, and reopened with `?` or the help button.
 - **Export and import.** Progress lives in `localStorage`, so the sidebar can save it to a file and
   load it on another device.
+- **The real diagrams.** 25 Paper 1 questions carry the actual figure, cropped straight out of
+  the source PDF, so a graph or a mechanism question reads as a whole question instead of prose
+  with a hole in it.
+- **About and bug reports.** `#/about` explains what the site is for and its limits. Every
+  question has a `report` link that copies a filled-in bug report (question id, topic, page)
+  and opens a Telegram chat with @roarinx to paste it into.
 - **Deep links into the source.** Every question knows which PDF and which page it came from.
 
 Progress lives in `localStorage`, so it is per browser and never leaves the machine.
@@ -58,6 +64,7 @@ data/reference.js   the reference: formulae, definitions, ion tests (hand-edited
 data/questions.js   the extracted past paper bank      (generated)
 data/objectives.js  the 304 learning objectives, ranked (generated)
 data/practice.js    the written practice bank          (generated)
+figures/            diagrams cropped from the papers   (generated, committed)
 practice/*.js       the written practice, one file per group of units (edit these)
 tools/*.pl          the extraction pipeline
 past_papers/        the source PDFs (gitignored, see below)
@@ -139,7 +146,21 @@ To regenerate after adding papers:
 bash tools/rebuild.sh
 ```
 
-### What the extraction cannot do
+### The figures
+
+pdftotext throws away every image, so a question built on a graph, a mechanism or a
+spectrum used to arrive as prose with a hole in it. `tools/extract_figures.pl` now crops the
+real artwork back out: `pdftotext -bbox-layout` gives the coordinates of every line, a figure
+is the tall band of the page that no prose line, option or tick-box row occupies, and a 1 bit
+probe render says whether that band actually holds ink and how far right it reaches. What
+survives goes to `pdftoppm` and lands in `figures/<question id>.png`.
+
+That covers 25 of the 46 Paper 1 questions flagged as needing one. The rest either have no
+real figure (the flag was a false positive, which the probe now catches) or start on a page
+the question index does not point at. Paper 2 and 3 are not cropped yet: their questions run
+across several pages, so the band logic needs to search more than one.
+
+### What the extraction still cannot do
 
 pdftotext throws away every image. Questions built on a graph, a mechanism, a spectrum or a
 displayed structure survive only as text, so they carry a "has a diagram" badge and a link to

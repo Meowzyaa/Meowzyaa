@@ -826,3 +826,63 @@ html[data-theme="dark"] .ref-f { color: var(--clay); }
 .tour-wrap { overflow-y: auto; overscroll-behavior: contain; }
 .tour-backdrop { position: fixed; }
 .tour { margin-bottom: 12px; }
+
+/* ---------- figures cropped from the source papers ---------- */
+
+.qfig {
+  margin: 12px 0 14px;
+  padding: 10px 10px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  /* the crops are black ink on white, so they keep a paper ground in dark mode */
+  background: #fff;
+}
+.qfig img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 620px;
+  margin: 0 auto;
+}
+.qfig figcaption {
+  margin-top: 7px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  color: #8c8578;
+}
+
+/* ---------- about and contact ---------- */
+
+.about { max-width: 720px; }
+.about-sec { margin-top: 32px; }
+.about-sec p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--ink-2); }
+.about-list { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.about-list li {
+  position: relative; padding-left: 18px;
+  font-size: 14px; line-height: 1.6; color: var(--ink-2);
+}
+.about-list li::before {
+  content: ""; position: absolute; left: 2px; top: .62em;
+  width: 6px; height: 6px; border-radius: 99px; background: var(--clay);
+}
+.about-list b { color: var(--ink); font-weight: 600; }
+.about-list .q-tag { vertical-align: 1px; }
+
+.contact-card {
+  max-width: 720px; margin-top: 36px; padding: 22px 24px;
+  display: grid; gap: 18px;
+  border: 1px solid color-mix(in srgb, var(--clay) 30%, var(--rule));
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, var(--clay-wash), var(--card) 75%);
+}
+.contact-card p { margin: 8px 0 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.contact-card .h-eyebrow { margin: 0 0 4px; }
+.contact-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 640px) {
+  .tb-link[href="#/about"] { display: none; }
+  .contact-card { padding: 18px 16px; }
+  .contact-actions .btn { flex: 1 1 auto; }
+}
