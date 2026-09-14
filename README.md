@@ -1,25 +1,22 @@
-# Azamat Portfolio
+# Shaimardan Azamat
 
-Personal resume and portfolio site. Built to showcase my Python Flask web apps and my tutoring experience in Chemistry Physics and Math.
+Student at NIS Almaty. I build web apps, tutor, and make music as Meowzya.
 
-## Tech Stack
-* HTML5
-* CSS3
-* Hosted via GitHub Pages
+- **[chemprep](https://meowzyaa.dev/chemprep/)**: revision site for the NIS grade 12 chemistry exam, built from the 2014 to 2025 past papers
+- **[NovaNIS](https://github.com/Meowzyaa/enis2)**: my fork of enis2, a client for the NIS electronic diary (Vue, Vite, Fastify)
+- **[meowzyaa.dev](https://meowzyaa.dev)**: my site, and the source for it is this repo (React, TypeScript, Vite)
+- **[Meowzya on YouTube](https://www.youtube.com/@meowzyatheone)**: game soundtrack arrangements
 
-## Deployment
-Pushing to the main branch automatically deploys to GitHub Pages.
-<!--
-**Meowzyaa/Meowzyaa** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Reach me at meowzya@proton.me or on [Telegram](https://t.me/roarinx).
 
-Here are some ideas to get you started:
+## This repo
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+The site is a single React page built with Vite and deployed to GitHub Pages by
+`.github/workflows/deploy.yml` on every push to `main`. chemprep is a separate static
+site that lives in `public/chemprep/`, so Vite copies it to `/chemprep/` untouched.
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # type-check, then build to dist/
+```

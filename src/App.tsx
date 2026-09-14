@@ -1,341 +1,264 @@
-import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, ReactElement } from "react";
+import type { ReactElement } from "react";
 
-type ProfileLink = {
-  readonly label: string;
-  readonly href: string;
-  readonly external: boolean;
-};
-
-type SkillGroup = {
+type Release = {
+  readonly no: string;
   readonly title: string;
-  readonly tags: readonly string[];
+  readonly note: string;
+  readonly format: string;
+  readonly action: { readonly label: string; readonly href: string };
 };
 
-type TimelineItem = {
-  readonly period: string;
-  readonly role: string;
-  readonly description: string;
-};
-
-type Project = {
+type Side = {
+  readonly id: string;
+  readonly side: string;
   readonly name: string;
-  readonly tech: string;
-  readonly description: string;
-  readonly href: string;
+  readonly releases: readonly Release[];
 };
 
-const PROFILE_LINKS: readonly ProfileLink[] = [
-  { label: "GitHub", href: "https://github.com/Meowzyaa", external: true },
-  { label: "Artist", href: "https://artists.landr.com/Meowzya", external: true },
-  { label: "Email", href: "mailto:meowzya@proton.me", external: false }
-];
-
-const SKILL_GROUPS: readonly SkillGroup[] = [
-  { title: "Engineering", tags: ["TypeScript", "React", "Vite", "CSS"] },
-  { title: "Data", tags: ["Cleaning", "Formatting", "Converting"] },
-  { title: "Tutoring", tags: ["Chemistry", "Physics", "Mathematics"] },
-  { title: "Music", tags: ["Composing", "Post-rock"] },
-  { title: "Learning", tags: ["Machine learning"] }
-];
-
-const TIMELINE: readonly TimelineItem[] = [
-  {
-    period: "Now",
-    role: "NIS Almaty · 11th Grade",
-    description: "Building software and growing a strong STEM foundation with a focus on practical projects."
-  },
-  {
-    period: "Current Focus",
-    role: "Developer",
-    description: "Crafting fast interfaces, improving visual quality, and shipping work with production standards."
-  }
-];
-
-const PROJECTS: readonly Project[] = [
-  {
-    name: "meowzyaa.dev",
-    tech: "React · TypeScript · Vite",
-    description: "This site — a hand-built portfolio with zero UI libraries, animated with plain CSS.",
-    href: "https://github.com/Meowzyaa/Meowzyaa"
-  },
-  {
-    name: "enis2",
-    tech: "Vue",
-    description: "Contributing to enis resurrection 2 — an open-source revival of a school gradebook client.",
-    href: "https://github.com/Meowzyaa/enis2"
-  },
-  {
-    name: "Meowzya (music)",
-    tech: "Post-rock",
-    description: "Original compositions, written and produced solo, distributed via LANDR.",
-    href: "https://artists.landr.com/Meowzya"
-  }
-];
-
-/* --- Minecraft-style world --- */
-
-const GRID = 9;
-const BLOCK = 48;
-
-type SectionKey = "experience" | "skills" | "projects" | "links";
-
-type Landmark = {
-  readonly x: number;
-  readonly y: number;
-  readonly key: SectionKey;
-  readonly icon: string;
-  readonly label: string;
+type Contact = {
+  readonly via: string;
+  readonly handle: string;
+  readonly href?: string;
 };
 
-const LANDMARKS: readonly Landmark[] = [
-  { x: 2, y: 2, key: "experience", icon: "🎓", label: "Experience" },
-  { x: 6, y: 2, key: "skills", icon: "🛠️", label: "Skills" },
-  { x: 2, y: 6, key: "projects", icon: "📦", label: "Projects" },
-  { x: 6, y: 6, key: "links", icon: "✉️", label: "Links" }
-];
-
-type Block = {
-  readonly x: number;
-  readonly y: number;
-  readonly h: number;
-  readonly kind: "grass" | "stone" | "water";
-  readonly landmark?: Landmark;
-};
-
-// ponytail: deterministic sine-wave heightmap, swap for real noise if the terrain ever needs to grow
-const TERRAIN: readonly Block[] = (() => {
-  const blocks: Block[] = [];
-  for (let y = 0; y < GRID; y++) {
-    for (let x = 0; x < GRID; x++) {
-      const landmark = LANDMARKS.find((l) => l.x === x && l.y === y);
-      if (landmark) {
-        blocks.push({ x, y, h: 34, kind: "grass", landmark });
-        continue;
+// Every line here should be checkable against a repo, a commit or a live URL.
+const SIDES: readonly Side[] = [
+  {
+    id: "work",
+    side: "Side A",
+    name: "Software",
+    releases: [
+      {
+        no: "A1",
+        title: "chemprep",
+        note: "Revision site for the NIS grade 12 chemistry exam. Every question from the 2014 to 2025 past papers, sorted by syllabus topic and marked against the official keys where they exist.",
+        format: "JavaScript, Perl",
+        action: { label: "Open", href: "https://meowzyaa.dev/chemprep/" }
+      },
+      {
+        no: "A2",
+        title: "NovaNIS",
+        note: "My fork of enis2, an open-source client for the NIS electronic diary: grades and the report card in a web app built for phones, with a Fastify proxy because NIS has no public API.",
+        format: "Vue, Vite, Fastify",
+        action: { label: "Source", href: "https://github.com/Meowzyaa/enis2" }
+      },
+      {
+        no: "A3",
+        title: "meowzyaa.dev",
+        note: "This site. Built with Vite and deployed to GitHub Pages on every push.",
+        format: "React, TypeScript",
+        action: { label: "Source", href: "https://github.com/Meowzyaa/Meowzyaa" }
       }
-      const wave = Math.sin(x * 1.3 + 0.8) + Math.cos(y * 1.1 + 1.9) + Math.sin((x + y) * 0.6);
-      if (wave < -1.15) {
-        blocks.push({ x, y, h: 8, kind: "water" });
-        continue;
+    ]
+  },
+  {
+    id: "music",
+    side: "Side B",
+    name: "Music",
+    releases: [
+      {
+        no: "B1",
+        title: "Meowzya",
+        note: "Game soundtrack arrangements, produced in FL Studio and published with their own music videos.",
+        format: "YouTube",
+        action: { label: "Watch", href: "https://www.youtube.com/@meowzyatheone" }
       }
-      blocks.push({
-        x,
-        y,
-        h: Math.round(16 + (wave + 1.15) * 7),
-        kind: wave > 1.7 ? "stone" : "grass"
-      });
-    }
+    ]
   }
-  return blocks;
-})();
+];
 
-const PANEL_TITLES: Record<SectionKey, string> = {
-  experience: "Experience",
-  skills: "Skills",
-  projects: "Projects",
-  links: "Links"
-};
+const CONTACTS: readonly Contact[] = [
+  { via: "Mail", handle: "meowzya@proton.me", href: "mailto:meowzya@proton.me" },
+  { via: "Telegram", handle: "@roarinx", href: "https://t.me/roarinx" },
+  { via: "YouTube", handle: "@meowzyatheone", href: "https://www.youtube.com/@meowzyatheone" },
+  { via: "GitHub", handle: "Meowzyaa", href: "https://github.com/Meowzyaa" },
+  { via: "Based in", handle: "Almaty, Kazakhstan" }
+];
 
-function PanelContent({ section }: { readonly section: SectionKey }): ReactElement {
-  if (section === "experience") {
-    return (
-      <ul className="timeline-list">
-        {TIMELINE.map((item: TimelineItem) => (
-          <li className="timeline-item" key={item.period}>
-            <p className="timeline-period">{item.period}</p>
-            <p className="timeline-role">{item.role}</p>
-            <p className="timeline-description">{item.description}</p>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  if (section === "skills") {
-    return (
-      <ul className="skills-list">
-        {SKILL_GROUPS.map((group: SkillGroup) => (
-          <li className="skills-item" key={group.title}>
-            <span className="skills-title">{group.title}</span>
-            <span className="tag-row">
-              {group.tags.map((tag: string) => (
-                <span className="tag" key={tag}>
-                  {tag}
-                </span>
-              ))}
-            </span>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  if (section === "projects") {
-    return (
-      <ul className="projects-list">
-        {PROJECTS.map((project: Project) => (
-          <li key={project.name}>
-            <a className="project-item" href={project.href} target="_blank" rel="noopener noreferrer">
-              <span className="project-head">
-                <span className="project-name">{project.name}</span>
-                <span className="project-tech">{project.tech}</span>
-              </span>
-              <span className="project-description">{project.description}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-    );
-  }
+const CATALOGUE = "MZY-2026";
+
+const NAV = [
+  { label: "Work", href: "#work" },
+  { label: "Music", href: "#music" },
+  { label: "Contact", href: "#contact" }
+];
+
+function Arrow(): ReactElement {
   return (
-    <nav aria-label="Profile links">
-      <ul className="links-list">
-        {PROFILE_LINKS.map((link: ProfileLink) => (
-          <li key={link.label}>
-            <a
-              className="text-link"
-              href={link.href}
-              target={link.external ? "_blank" : undefined}
-              rel={link.external ? "noopener noreferrer" : undefined}
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <svg className="arrow" viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M2.5 7.5 7.5 2.5M3.5 2.5h4v4" />
+    </svg>
   );
 }
 
-const PANEL_WIDTH = 460; // panel + right margin, used to center the zoom target in the free space
-
-export default function App(): ReactElement {
-  const [selected, setSelected] = useState<SectionKey | null>(null);
-  const [zoom, setZoom] = useState<CSSProperties | undefined>(undefined);
-  const worldRef = useRef<HTMLDivElement | null>(null);
-
-  const close = (): void => {
-    setSelected(null);
-    setZoom((prev) => (prev ? { ...prev, transform: "translate(0px, 0px) scale(1)" } : prev));
-  };
-
-  const openSection = (key: SectionKey, target: HTMLElement): void => {
-    const world = worldRef.current;
-    if (world) {
-      const blockRect = target.getBoundingClientRect();
-      const worldRect = world.getBoundingClientRect();
-      const cx = blockRect.left + blockRect.width / 2;
-      const cy = blockRect.top + blockRect.height / 2;
-      const mobile = window.matchMedia("(max-width: 640px)").matches;
-      const scale = mobile ? 1.8 : 2.2;
-      const anchorX = mobile || window.innerWidth < PANEL_WIDTH * 2 ? window.innerWidth / 2 : (window.innerWidth - PANEL_WIDTH) / 2;
-      const anchorY = mobile ? window.innerHeight * 0.3 : window.innerHeight / 2;
-      setZoom({
-        transform: `translate(${anchorX - cx}px, ${anchorY - cy}px) scale(${scale})`,
-        transformOrigin: `${cx - worldRect.left}px ${cy - worldRect.top}px`
-      });
-    }
-    setSelected(key);
-  };
-
-  useEffect(() => {
-    if (selected === null) return;
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") close();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selected]);
-
+function External({ href, children }: { readonly href: string; readonly children: ReactElement | string }): ReactElement {
+  const outside = href.startsWith("http");
   return (
-    <div className="site-shell">
-      <div className="ambient" aria-hidden="true">
-        <span className="orb orb-a" />
-        <span className="orb orb-b" />
-        <span className="orb orb-c" />
+    <a href={href} target={outside ? "_blank" : undefined} rel={outside ? "noopener noreferrer" : undefined}>
+      {children}
+    </a>
+  );
+}
+
+function Disc({ className }: { readonly className: string }): ReactElement {
+  return (
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+      <circle className="disc-face" cx="16" cy="16" r="15" />
+      <circle className="disc-groove" cx="16" cy="16" r="10" />
+      <circle className="disc-hole" cx="16" cy="16" r="2.5" />
+    </svg>
+  );
+}
+
+// The one illustration: a centre label, the part of a record that carries the name.
+function CentreLabel(): ReactElement {
+  return (
+    <svg className="label" viewBox="0 0 240 240" role="img" aria-label="Record label reading Meowzyaa, Shaimardan Azamat, Almaty">
+      <defs>
+        <path id="rim" d="M 120 120 m -86 0 a 86 86 0 1 1 172 0 a 86 86 0 1 1 -172 0" />
+      </defs>
+      <circle className="label-disc" cx="120" cy="120" r="116" />
+      <circle className="label-ring" cx="120" cy="120" r="100" />
+      <circle className="label-ring" cx="120" cy="120" r="72" />
+      <text className="label-rim">
+        <textPath href="#rim" textLength="532" lengthAdjust="spacing">
+          MEOWZYAA · SHAIMARDAN AZAMAT · ALMATY · 2026 ·
+        </textPath>
+      </text>
+      <text className="label-side" x="120" y="104" textAnchor="middle">
+        SIDE B
+      </text>
+      <text className="label-cat" x="120" y="152" textAnchor="middle">
+        {CATALOGUE}
+      </text>
+      <circle className="label-hole" cx="120" cy="120" r="7" />
+    </svg>
+  );
+}
+
+function Tracklist({ side }: { readonly side: Side }): ReactElement {
+  return (
+    <section className="release" id={side.id} aria-labelledby={`${side.id}-title`}>
+      <div className="release-head">
+        <p className="release-side">{side.side}</p>
+        <h2 id={`${side.id}-title`} className="release-title">
+          {side.name}
+          <span className="release-count">({String(side.releases.length).padStart(2, "0")})</span>
+        </h2>
       </div>
 
-      <main className="layout" aria-label="Portfolio layout">
-        <header className="hero reveal-1">
-          <p className="eyebrow">meowzyaa.dev</p>
-          <h1 className="display-name">
-            Shaimardan <span className="accent-text">Azamat</span>
-          </h1>
-          <p className="display-role">Developer · Tutor · Composer · Almaty</p>
-        </header>
-
-        <section className="world-section reveal-2" aria-label="Interactive world">
-          <div className={`world${selected !== null ? " zoomed" : ""}`} ref={worldRef} style={zoom}>
-            <div className="scene">
-              {TERRAIN.map((block: Block) => {
-                const style = {
-                  left: block.x * BLOCK,
-                  top: block.y * BLOCK,
-                  "--h": `${block.h}px`
-                } as CSSProperties;
-                const faces = (
+      <table className="tracklist">
+        <thead>
+          <tr>
+            <th scope="col" className="col-no">#</th>
+            <th scope="col">Title</th>
+            <th scope="col" className="col-format">Format</th>
+            <th scope="col" className="col-action">
+              <span className="visually-hidden">Link</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {side.releases.map((release) => (
+            <tr key={release.no}>
+              <td className="col-no">{release.no}</td>
+              <td className="col-title">
+                <span className="track-title">{release.title}</span>
+                <span className="track-note">{release.note}</span>
+              </td>
+              <td className="col-format">{release.format}</td>
+              <td className="col-action">
+                <External href={release.action.href}>
                   <>
-                    <span className="face face-top" />
-                    <span className="face face-south" />
-                    <span className="face face-east" />
+                    {release.action.label}
+                    <Arrow />
                   </>
-                );
-                if (block.landmark) {
-                  return (
-                    <button
-                      type="button"
-                      key={`${block.x}-${block.y}`}
-                      className={`block ${block.kind} landmark`}
-                      style={style}
-                      aria-label={`Open ${block.landmark.label}`}
-                      onClick={(event) => openSection(block.landmark!.key, event.currentTarget)}
-                    >
-                      {faces}
-                      <span className="beacon">
-                        <span className="beacon-icon">{block.landmark.icon}</span>
-                        <span className="beacon-label">{block.landmark.label}</span>
-                      </span>
-                    </button>
-                  );
-                }
-                return (
-                  <div key={`${block.x}-${block.y}`} className={`block ${block.kind}`} style={style}>
-                    {faces}
-                  </div>
-                );
-              })}
-            </div>
+                </External>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+export default function App(): ReactElement {
+  const [sideA, sideB] = SIDES;
+
+  return (
+    <>
+      <header className="nav">
+        <div className="nav-inner">
+          <a className="nav-mark" href="#top" aria-label="Meowzyaa, back to top">
+            <Disc className="nav-disc" />
+            <span>Meowzyaa</span>
+          </a>
+          <nav aria-label="Sections">
+            <ul className="nav-links">
+              {NAV.map((item) => (
+                <li key={item.href}>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+      <div className="sleeve" id="top">
+        <section className="cover" aria-labelledby="name">
+          <div className="cover-main">
+            <dl className="release-data">
+              <div>
+                <dt>Cat. no.</dt>
+                <dd>{CATALOGUE}</dd>
+              </div>
+              <div>
+                <dt>Updated</dt>
+                <dd>{__BUILD_DATE__}</dd>
+              </div>
+            </dl>
+            <h1 id="name" className="title">
+              <span>Shaimardan</span>
+              <span>Azamat</span>
+            </h1>
           </div>
-          <p className="world-hint">Tap a marker to explore</p>
+          <p className="liner">
+            Student at NIS Almaty. I build web apps, tutor, and arrange music as <em>Meowzya</em>. This is the tracklist so far.
+          </p>
         </section>
 
-        <footer className="quick-links reveal-3">
-          {PROFILE_LINKS.map((link: ProfileLink) => (
-            <a
-              className="text-link"
-              key={link.label}
-              href={link.href}
-              target={link.external ? "_blank" : undefined}
-              rel={link.external ? "noopener noreferrer" : undefined}
-            >
-              {link.label}
-            </a>
-          ))}
-        </footer>
-      </main>
+        <main>
+          <Tracklist side={sideA} />
+          <div className="side-b">
+            <Tracklist side={sideB} />
+            <CentreLabel />
+          </div>
+        </main>
 
-      {selected !== null && (
-        <>
-          <div className="backdrop" onClick={close} aria-hidden="true" />
-          <section className="card panel" role="dialog" aria-modal="true" aria-label={PANEL_TITLES[selected]}>
-            <div className="panel-head">
-              <h2 className="section-title panel-title">{PANEL_TITLES[selected]}</h2>
-              <button type="button" className="panel-close" onClick={close} aria-label="Close panel">
-                ✕
-              </button>
-            </div>
-            <PanelContent section={selected} />
-          </section>
-        </>
-      )}
-    </div>
+        <section className="release" id="contact" aria-labelledby="contact-title">
+          <div className="release-head">
+            <p className="release-side">Credits</p>
+            <h2 id="contact-title" className="release-title">
+              Contact
+            </h2>
+          </div>
+          <dl className="credits">
+            {CONTACTS.map((contact) => (
+              <div className="credit" key={contact.via}>
+                <dt>{contact.via}</dt>
+                <dd>{contact.href ? <External href={contact.href}>{contact.handle}</External> : contact.handle}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <footer className="imprint">
+          <span>&copy; {new Date().getFullYear()} Meowzyaa</span>
+          <span>{CATALOGUE}</span>
+        </footer>
+      </div>
+    </>
   );
 }
