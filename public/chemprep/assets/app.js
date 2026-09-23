@@ -1140,8 +1140,20 @@
 
   // Countdown to the ESA. The date is the student's to set, since it moves
   // from year to year and school to school.
+  // The ESA sits in May. Until a student sets the real date, count down to
+  // mid-May in weeks, since a day count would claim precision it lacks.
+  function nextMay() {
+    var now = new Date(), y = now.getFullYear();
+    if (now.getMonth() > 4) y++; // June onwards: next year's sitting
+    return new Date(y, 4, 15);
+  }
   function examLine() {
-    if (!S.examDate) return '<span>ESA date</span><button class="linkish" id="exam-set">Set it</button><input type="date" id="exam-in" hidden aria-label="ESA date">';
+    if (!S.examDate) {
+      var wk = Math.max(0, Math.round((nextMay().getTime() - dayStart(Date.now())) / (7 * DAY)));
+      return '<span>' + (wk > 1 ? 'About <b>' + wk + ' weeks</b> to the ESA' : 'The ESA is <b>this month</b>') +
+        ' <i class="muted">(May)</i></span><button class="linkish" id="exam-set">Set exact date</button>' +
+        '<input type="date" id="exam-in" hidden aria-label="ESA date">';
+    }
     var d = Math.round((new Date(S.examDate + 'T00:00:00').getTime() - dayStart(Date.now())) / DAY);
     var txt = d > 1 ? '<b>' + d + '</b> days to the ESA' : d === 1 ? 'ESA is <b>tomorrow</b>' : d === 0 ? 'ESA is <b>today</b>. Good luck.' : 'ESA date has passed';
     return '<span>' + txt + '</span><button class="linkish" id="exam-set">Change</button><input type="date" id="exam-in" hidden value="' + S.examDate + '" aria-label="ESA date">';
