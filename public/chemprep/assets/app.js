@@ -129,6 +129,7 @@
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
     menu: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>'
   };
+  ICONS['chevron-right'] = '<path d="m9 18 6-6-6-6"/>';
   ICONS.info = '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>';
   ICONS.send = '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>';
   ICONS.bug = '<path d="M12 20v-9"/><path d="M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z"/><path d="M14.12 3.88 16 2"/><path d="M21 21a4 4 0 0 0-3.81-4"/><path d="M21 5a4 4 0 0 1-3.55 3.97"/><path d="M22 13h-4"/><path d="M3 21a4 4 0 0 1 3.81-4"/><path d="M3 5a4 4 0 0 0 3.55 3.97"/><path d="M6 13H2"/><path d="m8 2 1.88 1.88"/><path d="M9 7.13V6a3 3 0 1 1 6 0v1.13"/>';
@@ -313,11 +314,19 @@
     var badge = $('#review-count');
     badge.textContent = w;
     badge.hidden = w === 0;
+    var tabBadge = $('#tab-review-count');
+    tabBadge.textContent = w;
+    tabBadge.hidden = w === 0;
   }
 
   function markNav(route) {
-    Array.prototype.forEach.call(document.querySelectorAll('.nav-item'), function (a) {
+    Array.prototype.forEach.call(document.querySelectorAll('.nav-item, .tab-item'), function (a) {
       a.classList.toggle('on', a.dataset.route === route);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.tb-link'), function (a) {
+      var on = a.getAttribute('href') === '#' + route;
+      a.classList.toggle('on', on);
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
   }
 
@@ -862,39 +871,56 @@
 
     var frag = document.createDocumentFragment();
 
+    var pct = o.total ? Math.round((o.ok / o.total) * 100) : 0;
+    var C = 2 * Math.PI * 36;
+    var w = wrongQuestions().length;
     var hero = el('section', 'hero');
     hero.innerHTML =
       '<div class="hero-in">' +
         '<p class="hero-greet">' + esc(greeting()) + '</p>' +
-        '<h1 class="display">Every past paper question,<br>filed under the topic it tests.</h1>' +
-        '<p class="lede">' + QS.length + ' real questions pulled out of the NIS grade 12 chemistry papers from ' +
+        '<h1 class="display">Every past paper question, filed under the topic it tests.</h1>' +
+        '<p class="lede">' + QS.length + ' real questions from the NIS grade 12 chemistry papers, ' +
           yearList[0] + ' to ' + yearList[yearList.length - 1] + ', sorted into the ' +
           Object.keys(TOPIC).length + ' units of the syllabus. Pick a topic you are shaky on and work through what has actually been asked.</p>' +
-        '<div class="stat-row">' +
-          '<div class="stat"><b>' + QS.length + '</b><span>questions</span></div>' +
-          '<div class="stat"><b>' + yearList.length + '</b><span>exam years</span></div>' +
-          '<div class="stat"><b>' + withKey + '</b><span>auto marked</span></div>' +
-          '<div class="stat"><b>' + withScheme + '</b><span>mark schemes</span></div>' +
-          '<div class="stat"><b>' + withExaminer + '</b><span>examiner notes</span></div>' +
-          '<div class="stat"><b>' + PRACTICE.length + '</b><span>written practice</span></div>' +
-          '<div class="stat"><b>' + o.ok + '</b><span>you have right</span></div>' +
-        '</div>' +
         '<div class="cta-row">' +
           '<a class="btn primary" href="#/drill/all">' + icon('zap') + 'Start a mixed drill</a>' +
           '<a class="btn" href="#/goals">' + icon('list') + 'Work the syllabus</a>' +
           '<a class="btn" href="#/papers">' + icon('book') + 'Browse the papers</a>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      '<aside class="hero-panel" aria-label="Your progress">' +
+        '<div class="hp-head">Your progress<span>' + o.seen + ' of ' + o.total + ' tried</span></div>' +
+        '<div class="hp-ring">' +
+          '<div class="ring" role="img" aria-label="' + pct + ' percent right">' +
+            '<svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36"/>' +
+            '<circle class="fill" cx="42" cy="42" r="36" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' +
+              (C * (1 - pct / 100)).toFixed(1) + '"/></svg>' +
+            '<b>' + pct + '%<small>right</small></b>' +
+          '</div>' +
+          '<div class="hp-legend">' +
+            '<span class="ok">Right<b>' + o.ok + '</b></span>' +
+            '<span class="no">Wrong<b>' + o.no + '</b></span>' +
+            '<span>Not tried<b>' + (o.total - o.seen) + '</b></span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="hp-actions">' +
+          (w ? '<a class="btn small" href="#/review">Review pile<span class="pill no">' + w + '</span></a>' : '') +
+          (S.last && S.last.hash
+            ? '<a class="btn small" href="' + esc(S.last.hash) + '">Continue: ' + esc(S.last.label) + icon('chevron-right') + '</a>'
+            : '<a class="btn small" href="#/drill/all">Answer your first question' + icon('chevron-right') + '</a>') +
+        '</div>' +
+      '</aside>';
     frag.appendChild(hero);
 
-    if (S.last && S.last.hash) {
-      var ls = el('div', 'strip soft');
-      ls.innerHTML = '<span>Pick up where you left off: <b>' + esc(S.last.label) + '</b></span>';
-      var lg = el('a', 'btn small', 'Continue');
-      lg.href = S.last.hash;
-      ls.appendChild(lg);
-      frag.appendChild(ls);
-    }
+    var stats = el('div', 'stat-row');
+    stats.innerHTML =
+      '<div class="stat"><b>' + QS.length + '</b><span>past paper questions</span></div>' +
+      '<div class="stat"><b>' + yearList.length + '</b><span>exam years</span></div>' +
+      '<div class="stat"><b>' + withKey + '</b><span>auto marked</span></div>' +
+      '<div class="stat"><b>' + withScheme + '</b><span>with mark schemes</span></div>' +
+      '<div class="stat"><b>' + withExaminer + '</b><span>examiner notes</span></div>' +
+      '<div class="stat"><b>' + PRACTICE.length + '</b><span>written practice</span></div>';
+    frag.appendChild(stats);
 
     var pDone = PRACTICE.filter(function (p) { return result(p.id); }).length;
     if (pDone) {
@@ -921,16 +947,6 @@
       frag.appendChild(strip);
     }
 
-    var w = wrongQuestions().length;
-    if (w) {
-      var s2 = el('div', 'strip');
-      s2.innerHTML = '<span><b>' + w + '</b> question' + (w === 1 ? '' : 's') + ' waiting in your review pile</span>';
-      var g2 = el('a', 'btn small', 'Review now');
-      g2.href = '#/review';
-      s2.appendChild(g2);
-      frag.appendChild(s2);
-    }
-
     UNITS.forEach(function (u) {
       var head = el('div', 'sec-head');
       head.innerHTML = '<div><h2 class="sec">' + esc(u.name) + '</h2>' +
@@ -946,11 +962,13 @@
         var noPct = st.total ? (st.no / st.total) * 100 : 0;
         a.innerHTML =
           '<div class="tc-top"><span class="tc-code">' + esc(t.code) + '</span>' +
-          '<span class="tc-n">' + st.total + '</span></div>' +
+          '<span class="tc-n">' + st.total + ' question' + (st.total === 1 ? '' : 's') + '</span></div>' +
           '<h3 class="tc-name">' + esc(t.name) + '</h3>' +
           '<p class="tc-blurb">' + esc(t.blurb) + '</p>' +
           '<div class="tc-bar"><i class="ok" style="width:' + okPct + '%"></i>' +
-          '<i class="no" style="width:' + noPct + '%"></i></div>';
+          '<i class="no" style="width:' + noPct + '%"></i></div>' +
+          '<div class="tc-foot"><span>' + (st.seen ? st.seen + ' tried' : 'Not started') + '</span>' +
+          (st.seen ? '<b>' + Math.round(okPct) + '% right</b>' : '') + '</div>';
         grid.appendChild(a);
       });
       frag.appendChild(grid);
@@ -1858,6 +1876,8 @@
       themeTimer = setTimeout(function () { root.classList.remove('theming'); }, 350);
     }
     root.dataset.theme = t;
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.content = t === 'dark' ? '#0a0c10' : '#ffffff';
     S.theme = t;
     save();
   }
