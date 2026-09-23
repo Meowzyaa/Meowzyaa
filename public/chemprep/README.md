@@ -21,9 +21,18 @@ and answer it. No build step, no dependencies, no backend.
 - **A syllabus mode.** All 304 learning objectives from the grade 11 and 12 course calendars,
   ranked by how hard the past papers lean on each one, each linking to the archive questions
   that test it and to written practice with worked solutions.
-- **Drills.** Mixed, per topic, or against your review pile. Questions that mark themselves come
-  first, unseen before seen. Keyboard: `a` to `d` to answer, `f` to flag, `enter` for next, `/` to search, `esc` to close the search or the menu.
-- **A review pile.** Anything you got wrong or flagged collects in one place.
+- **A practice builder.** Choose topics, which questions (not tried, due, got wrong, flagged, all),
+  how many, and a mode, in the style of UWorld's "create test". One-click Quick 20, Review due and
+  Weak spots sit above it.
+- **Tutor and exam modes.** Tutor marks each answer as you go; exam mode runs a clock and holds the
+  marks until you submit. Both have a numbered question navigator and end on a results report with a
+  per-topic breakdown and a retry of the misses. Sessions survive a reload.
+- **Spaced review.** After each auto-marked answer you rate your confidence (guessed, unsure, knew
+  it). Misses and guesses come back after 1, 3, 7, 16 then 35 days (a Leitner schedule, as in Anki and
+  Brainscape). The review badge counts what is due today. Keyboard: `a` to `d` answer, `1` to `3`
+  confidence, `f` flag, arrows or `enter` to move, `/` search, `esc` closes the search or the menu.
+- **A Today dashboard.** Daily goal ring, streak, what is due, a countdown to your ESA date, and a
+  strengths and weaknesses table, weakest topic first.
 - **A reference (справочник).** Formulae, definitions, colour changes and the ion and gas tests from
   the official data booklet, one section per unit, filterable, and searched by the main search box.
   Press `r` from anywhere.

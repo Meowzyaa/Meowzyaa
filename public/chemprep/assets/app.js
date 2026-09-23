@@ -52,10 +52,32 @@
         v.sideHidden = !!v.sideHidden;
         v.last = v.last || null;
         v.tourSeen = !!v.tourSeen;
+        v.srs = v.srs || {};
+        v.goal = v.goal || 20;
+        v.examDate = v.examDate || null;
+        v.session = v.session || null;
+        v.builder = v.builder || null;
+        if (!v.days) {
+          // older saves only kept the latest answer per question; that is still
+          // enough to rebuild a rough activity history for the streak
+          v.days = {};
+          Object.keys(v.results).forEach(function (id) {
+            var r = v.results[id];
+            if (r && r.at) { var d = dayKey(r.at); v.days[d] = (v.days[d] || 0) + 1; }
+          });
+        }
         return v;
       }
     } catch (e) { /* private mode, first run */ }
-    return { results: {}, notes: {}, flags: {}, theme: null, last: null, tourSeen: false };
+    return { results: {}, notes: {}, flags: {}, theme: null, last: null, tourSeen: false,
+      srs: {}, days: {}, goal: 20, examDate: null, session: null, builder: null };
+  }
+
+  var DAY = 86400000;
+  function dayStart(t) { var d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  function dayKey(t) {
+    var d = new Date(t);
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
 
   // where the student was last working, so the home page can offer a way back
@@ -73,11 +95,76 @@
   }
 
   function result(id) { return S.results[id] || null; }
+  // Returns the review box the question sat in before this answer, so a
+  // confidence rating given straight after can reschedule from the same base.
   function setResult(id, status, pick) {
+    var base = S.srs[id] ? S.srs[id].box : (S.results[id] && S.results[id].s === 'wrong' ? 1 : 0);
     S.results[id] = { s: status, at: Date.now(), pick: pick || null };
+    var today = dayKey(Date.now());
+    S.days[today] = (S.days[today] || 0) + 1;
+    schedule(id, status === 'correct', null, base);
+    save();
+    refreshChrome();
+    return base;
+  }
+
+  /* ---------------- spaced review ---------------- */
+
+  // A Leitner schedule, as in Anki and Brainscape: a miss or a guess comes back
+  // tomorrow, then each clean answer pushes it further out. Questions answered
+  // right with confidence the first time never enter the pile at all.
+  var INTERVAL = [0, 1, 3, 7, 16, 35];
+
+  function schedule(id, ok, conf, base) {
+    var box;
+    if (!ok || conf === 'guess') box = 1;
+    else if (conf === 'unsure') box = Math.max(2, base);
+    else if (conf === 'knew') box = base ? base + 2 : 0;
+    else box = base ? base + 1 : 0;
+    if (box > 5) box = 0; // learned: retire it
+    if (!box) { delete S.srs[id]; return; }
+    S.srs[id] = { box: box, due: dayStart(Date.now()) + INTERVAL[box] * DAY };
+  }
+
+  function rateConfidence(id, conf, base) {
+    var r = result(id);
+    if (!r) return;
+    schedule(id, r.s === 'correct', conf, base);
     save();
     refreshChrome();
   }
+
+  function isDue(q, now) {
+    var c = S.srs[q.id];
+    if (c) return c.due <= now;
+    var r = result(q.id);
+    return !!(r && r.s === 'wrong'); // mistakes from before the schedule existed
+  }
+  function dueQuestions() {
+    var now = Date.now();
+    return QS.filter(function (q) { return isDue(q, now); });
+  }
+  function upcoming(days) {
+    var now = Date.now(), until = dayStart(now) + (days + 1) * DAY;
+    return QS.filter(function (q) {
+      var c = S.srs[q.id];
+      return c && c.due > now && c.due < until;
+    }).length;
+  }
+  function mistakes() {
+    return QS.filter(function (q) { var r = result(q.id); return r && r.s === 'wrong'; });
+  }
+  function flagged() {
+    return QS.filter(function (q) { return S.flags[q.id]; });
+  }
+
+  function streak() {
+    var n = 0, t = Date.now();
+    if (!S.days[dayKey(t)]) t -= DAY; // today not started yet does not break it
+    while (S.days[dayKey(t)]) { n++; t -= DAY; }
+    return n;
+  }
+  function todayCount() { return S.days[dayKey(Date.now())] || 0; }
 
   /* ---------------- helpers ---------------- */
 
@@ -129,6 +216,12 @@
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
     menu: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>'
   };
+  ICONS.x = '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>';
+  ICONS.clock = '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>';
+  ICONS.target = '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>';
+  ICONS.flame = '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>';
+  ICONS.calendar = '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>';
+  ICONS['chevron-left'] = '<path d="m15 18-6-6 6-6"/>';
   ICONS['chevron-right'] = '<path d="m9 18 6-6-6-6"/>';
   ICONS.info = '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>';
   ICONS.send = '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>';
@@ -140,6 +233,14 @@
   }
 
   var CHEVRON = '<span class="q-chev" aria-hidden="true">' + icon('chevron') + '</span>';
+
+  // Isaac-style status mark: empty ring, tick or cross, readable at a glance
+  function statusMark(r) {
+    if (!r) return '<span class="q-status" title="Not tried" aria-label="Not tried"></span>';
+    var ok = r.s === 'correct';
+    return '<span class="q-status ' + (ok ? 'ok' : 'no') + '" title="' + (ok ? 'Right' : 'Wrong') +
+      '" aria-label="' + (ok ? 'Answered right' : 'Answered wrong') + '">' + icon(ok ? 'check' : 'x') + '</span>';
+  }
 
   // The diagram cropped straight out of the source PDF, where we have one.
   function figureFor(q) {
@@ -218,13 +319,6 @@
     return { total: QS.length, ok: ok, no: no, seen: seen };
   }
 
-  function wrongQuestions() {
-    return QS.filter(function (q) {
-      var r = result(q.id);
-      return (r && r.s === 'wrong') || S.flags[q.id];
-    });
-  }
-
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -263,10 +357,15 @@
     home.dataset.route = '/';
     nav.appendChild(home);
 
-    var drill = el('a', 'nav-item', icon('zap') + '<span class="ni-name">Mixed drill</span>');
-    drill.href = '#/drill/all';
-    drill.dataset.route = '/drill/all';
+    var drill = el('a', 'nav-item', icon('zap') + '<span class="ni-name">Practice</span>');
+    drill.href = '#/practice';
+    drill.dataset.route = '/practice';
     nav.appendChild(drill);
+
+    var rev = el('a', 'nav-item', icon('again') + '<span class="ni-name">Review</span><span class="ni-n" id="nav-due"></span>');
+    rev.href = '#/review';
+    rev.dataset.route = '/review';
+    nav.appendChild(rev);
 
     var goals = el('a', 'nav-item',
       icon('list') + '<span class="ni-name">Syllabus objectives</span><span class="ni-n">' + GOALS.length + '</span>');
@@ -310,10 +409,12 @@
       ? o.ok + ' right, ' + o.no + ' wrong, ' + (o.total - o.seen) + ' left'
       : 'nothing attempted yet';
 
-    var w = wrongQuestions().length;
+    var w = dueQuestions().length;
     var badge = $('#review-count');
     badge.textContent = w;
     badge.hidden = w === 0;
+    var navDue = $('#nav-due');
+    if (navDue) navDue.textContent = w ? w + ' due' : '';
     var tabBadge = $('#tab-review-count');
     tabBadge.textContent = w;
     tabBadge.hidden = w === 0;
@@ -531,9 +632,9 @@
     if (q.kind !== 'structured') {
       meta += q.answer ? '<span class="pill key">key</span>' : '<span class="pill nokey">no key</span>';
     }
-    if (r) meta += '<span class="pill ' + (r.s === 'correct' ? 'ok' : 'no') + '">' + (r.s === 'correct' ? 'right' : 'wrong') + '</span>';
+    if (S.flags[q.id]) meta += '<span class="pill flagp">' + icon('flag') + 'flagged</span>';
 
-    head.innerHTML = tags +
+    head.innerHTML = statusMark(r) + tags +
       '<span class="q-stem">' + chem(preview(q)) + '</span>' +
       '<span class="q-meta">' + meta + '</span>' + CHEVRON;
     head.setAttribute('aria-expanded', 'false');
@@ -609,13 +710,8 @@
       build();
       var rr = result(q.id);
       card.className = 'qcard is-open' + (rr ? ' ' + rr.s : '');
-      var m = $('.q-meta', head);
-      if (m && rr) {
-        var old = $('.pill.ok, .pill.no', m);
-        if (old) old.remove();
-        m.insertAdjacentHTML('beforeend',
-          '<span class="pill ' + (rr.s === 'correct' ? 'ok' : 'no') + '">' + (rr.s === 'correct' ? 'right' : 'wrong') + '</span>');
-      }
+      var st = $('.q-status', head);
+      if (st) st.outerHTML = statusMark(rr);
     }
 
     head.addEventListener('click', function () {
@@ -871,56 +967,102 @@
 
     var frag = document.createDocumentFragment();
 
-    var pct = o.total ? Math.round((o.ok / o.total) * 100) : 0;
+    var first = !o.seen;
+    var due = dueQuestions().length;
+    var today = todayCount();
+    var goalPct = Math.min(100, Math.round(today / S.goal * 100));
     var C = 2 * Math.PI * 36;
-    var w = wrongQuestions().length;
-    var hero = el('section', 'hero');
+    var ss = S.session && !S.session.done ? S.session : null;
+
+    var hero = el('section', 'hero' + (first ? ' is-first' : ''));
+    var cta =
+      '<div class="cta-row">' +
+        (ss
+          ? '<a class="btn primary" href="#/session">' + icon('zap') + 'Resume ' + esc(ss.title) + ' · ' +
+              Object.keys(ss.ans).length + '/' + ss.ids.length + '</a>' +
+            '<a class="btn" href="#/practice">New practice set</a>'
+          : '<a class="btn primary" href="#/practice">' + icon('zap') + 'Build a practice set</a>' +
+            '<a class="btn" href="#/drill/all">Quick 20</a>') +
+        (due ? '<a class="btn" href="#/drill/review">' + icon('again') + 'Review ' + due + ' due</a>' : '') +
+      '</div>';
     hero.innerHTML =
       '<div class="hero-in">' +
         '<p class="hero-greet">' + esc(greeting()) + '</p>' +
-        '<h1 class="display">Every past paper question, filed under the topic it tests.</h1>' +
-        '<p class="lede">' + QS.length + ' real questions from the NIS grade 12 chemistry papers, ' +
-          yearList[0] + ' to ' + yearList[yearList.length - 1] + ', sorted into the ' +
-          Object.keys(TOPIC).length + ' units of the syllabus. Pick a topic you are shaky on and work through what has actually been asked.</p>' +
-        '<div class="cta-row">' +
-          '<a class="btn primary" href="#/drill/all">' + icon('zap') + 'Start a mixed drill</a>' +
-          '<a class="btn" href="#/goals">' + icon('list') + 'Work the syllabus</a>' +
-          '<a class="btn" href="#/papers">' + icon('book') + 'Browse the papers</a>' +
-        '</div>' +
+        (first
+          ? '<h1 class="display">Every past paper question, filed under the topic it tests.</h1>' +
+            '<p class="lede">' + QS.length + ' real questions from the NIS grade 12 chemistry papers, ' +
+              yearList[0] + ' to ' + yearList[yearList.length - 1] + ', sorted into the ' +
+              Object.keys(TOPIC).length + ' units of the syllabus. Build a set, answer it, and the site schedules what you miss for review.</p>'
+          : '<h1 class="display">' + (due ? 'You have ' + due + ' question' + (due === 1 ? '' : 's') + ' to review.'
+              : today >= S.goal ? 'Daily goal done. Nice work.' : (S.goal - today) + ' questions to today’s goal.') + '</h1>' +
+            '<p class="lede">' + o.seen + ' of ' + o.total + ' archive questions tried, ' +
+              (o.seen ? Math.round(o.ok / o.seen * 100) + '% of them right.' : '') +
+              (due ? ' Clear the review first while it is fresh, then start something new.' : ' Pick up something new, or test yourself in exam mode.') + '</p>') +
+        cta +
       '</div>' +
-      '<aside class="hero-panel" aria-label="Your progress">' +
-        '<div class="hp-head">Your progress<span>' + o.seen + ' of ' + o.total + ' tried</span></div>' +
+      '<aside class="hero-panel today" aria-label="Today">' +
+        '<div class="hp-head">Today<span>' + new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }) + '</span></div>' +
         '<div class="hp-ring">' +
-          '<div class="ring" role="img" aria-label="' + pct + ' percent right">' +
+          '<div class="ring" role="img" aria-label="' + today + ' of ' + S.goal + ' questions today">' +
             '<svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36"/>' +
-            '<circle class="fill" cx="42" cy="42" r="36" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' +
-              (C * (1 - pct / 100)).toFixed(1) + '"/></svg>' +
-            '<b>' + pct + '%<small>right</small></b>' +
+            '<circle class="fill' + (goalPct >= 100 ? ' done' : '') + '" cx="42" cy="42" r="36" stroke-dasharray="' + C.toFixed(1) +
+              '" stroke-dashoffset="' + (C * (1 - goalPct / 100)).toFixed(1) + '"/></svg>' +
+            '<b>' + today + '<small>of ' + S.goal + '</small></b>' +
           '</div>' +
           '<div class="hp-legend">' +
-            '<span class="ok">Right<b>' + o.ok + '</b></span>' +
-            '<span class="no">Wrong<b>' + o.no + '</b></span>' +
-            '<span>Not tried<b>' + (o.total - o.seen) + '</b></span>' +
+            '<span class="streak">' + icon('flame') + '<em>' + streak() + '-day streak</em></span>' +
+            '<label class="goal-pick">Daily goal <select id="goal-sel" aria-label="Daily goal">' +
+              [10, 20, 30, 50].map(function (n) { return '<option' + (n === S.goal ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+            '</select></label>' +
           '</div>' +
         '</div>' +
-        '<div class="hp-actions">' +
-          (w ? '<a class="btn small" href="#/review">Review pile<span class="pill no">' + w + '</span></a>' : '') +
-          (S.last && S.last.hash
-            ? '<a class="btn small" href="' + esc(S.last.hash) + '">Continue: ' + esc(S.last.label) + icon('chevron-right') + '</a>'
-            : '<a class="btn small" href="#/drill/all">Answer your first question' + icon('chevron-right') + '</a>') +
+        '<div class="hp-rows">' +
+          '<a class="hp-row" href="#/review">' + icon('again') + '<span>Due for review</span><b>' + due + '</b></a>' +
+          '<div class="hp-row exam">' + icon('calendar') + examLine() + '</div>' +
         '</div>' +
       '</aside>';
     frag.appendChild(hero);
 
-    var stats = el('div', 'stat-row');
-    stats.innerHTML =
-      '<div class="stat"><b>' + QS.length + '</b><span>past paper questions</span></div>' +
-      '<div class="stat"><b>' + yearList.length + '</b><span>exam years</span></div>' +
-      '<div class="stat"><b>' + withKey + '</b><span>auto marked</span></div>' +
-      '<div class="stat"><b>' + withScheme + '</b><span>with mark schemes</span></div>' +
-      '<div class="stat"><b>' + withExaminer + '</b><span>examiner notes</span></div>' +
-      '<div class="stat"><b>' + PRACTICE.length + '</b><span>written practice</span></div>';
-    frag.appendChild(stats);
+    $('#goal-sel', hero).addEventListener('change', function (e) { S.goal = +e.target.value; save(); viewHome(); });
+    wireExamDate(hero);
+
+    // Strengths and weaknesses, the way Save My Exams lays them out: every
+    // topic you have enough answers in, weakest first
+    var perf = Object.keys(TOPIC).map(function (id) {
+      var st = topicStats(id);
+      return { id: id, st: st, rate: st.seen ? st.ok / st.seen : 0 };
+    }).filter(function (x) { return x.st.seen >= 2; });
+    if (perf.length) {
+      perf.sort(function (a, b) { return a.rate - b.rate; });
+      var sw = el('section', 'sw');
+      sw.innerHTML = '<div class="sec-head"><div><h2 class="sec">Strengths and weaknesses</h2>' +
+        '<p>Topics with at least two answers, weakest first. ' + (Object.keys(TOPIC).length - perf.length) + ' not started yet.</p></div></div>';
+      var tbl = el('div', 'topic-perf');
+      perf.slice(0, 6).forEach(function (x) {
+        var p = Math.round(x.rate * 100);
+        var r = el('div', 'tp-row');
+        r.innerHTML = '<a class="tp-name" href="#/topic/' + x.id + '">' + esc(TOPIC[x.id].name) + '</a>' +
+          '<span class="tp-bar"><i class="ok" style="width:' + (x.st.ok / x.st.total * 100) + '%"></i><i class="no" style="width:' + (x.st.no / x.st.total * 100) + '%"></i></span>' +
+          '<span class="tp-n">' + x.st.seen + '/' + x.st.total + ' tried</span>' +
+          '<span class="tp-p ' + (p >= 70 ? 'ok' : p >= 50 ? 'mid' : 'no') + '">' + p + '%</span>' +
+          '<a class="btn small" href="#/drill/' + x.id + '">Practise</a>';
+        tbl.appendChild(r);
+      });
+      sw.appendChild(tbl);
+      frag.appendChild(sw);
+    }
+
+    if (first) {
+      var stats = el('div', 'stat-row');
+      stats.innerHTML =
+        '<div class="stat"><b>' + QS.length + '</b><span>past paper questions</span></div>' +
+        '<div class="stat"><b>' + yearList.length + '</b><span>exam years</span></div>' +
+        '<div class="stat"><b>' + withKey + '</b><span>auto marked</span></div>' +
+        '<div class="stat"><b>' + withScheme + '</b><span>with mark schemes</span></div>' +
+        '<div class="stat"><b>' + withExaminer + '</b><span>examiner notes</span></div>' +
+        '<div class="stat"><b>' + PRACTICE.length + '</b><span>written practice</span></div>';
+      frag.appendChild(stats);
+    }
 
     var pDone = PRACTICE.filter(function (p) { return result(p.id); }).length;
     if (pDone) {
@@ -936,16 +1078,7 @@
       frag.appendChild(ps);
     }
 
-    var weak = weakest();
-    if (weak.length) {
-      var strip = el('div', 'strip');
-      strip.innerHTML = '<span>Weakest right now: <b>' +
-        weak.map(function (w) { return esc(TOPIC[w.id].name.toLowerCase()); }).join('</b>, <b>') + '</b></span>';
-      var go = el('a', 'btn small', 'Drill these');
-      go.href = '#/drill/weak';
-      strip.appendChild(go);
-      frag.appendChild(strip);
-    }
+    frag.appendChild(el('div', 'sec-head units-head', '<div><h2 class="sec">All topics</h2><p>The 25 units of the NIS syllabus, with how far you are through each.</p></div>'));
 
     UNITS.forEach(function (u) {
       var head = el('div', 'sec-head');
@@ -1000,8 +1133,27 @@
       n++;
       if (r.s === 'correct') ok++;
     });
-    if (n) line += ' ' + n + ' answered today, ' + ok + ' right.';
+    n = todayCount();
+    if (n) line += ' ' + n + ' answered today.';
     return line;
+  }
+
+  // Countdown to the ESA. The date is the student's to set, since it moves
+  // from year to year and school to school.
+  function examLine() {
+    if (!S.examDate) return '<span>ESA date</span><button class="linkish" id="exam-set">Set it</button><input type="date" id="exam-in" hidden aria-label="ESA date">';
+    var d = Math.round((new Date(S.examDate + 'T00:00:00').getTime() - dayStart(Date.now())) / DAY);
+    var txt = d > 1 ? '<b>' + d + '</b> days to the ESA' : d === 1 ? 'ESA is <b>tomorrow</b>' : d === 0 ? 'ESA is <b>today</b>. Good luck.' : 'ESA date has passed';
+    return '<span>' + txt + '</span><button class="linkish" id="exam-set">Change</button><input type="date" id="exam-in" hidden value="' + S.examDate + '" aria-label="ESA date">';
+  }
+  function wireExamDate(root) {
+    var b = $('#exam-set', root), inp = $('#exam-in', root);
+    if (!b) return;
+    b.addEventListener('click', function () {
+      b.hidden = true; inp.hidden = false; inp.focus();
+      if (inp.showPicker) { try { inp.showPicker(); } catch (e) { /* not allowed here */ } }
+    });
+    inp.addEventListener('change', function () { S.examDate = inp.value || null; save(); viewHome(); });
   }
 
   function weakest() {
@@ -1040,9 +1192,12 @@
     main.appendChild(head);
 
     var cta = el('div', 'cta-row');
-    var drillBtn = el('a', 'btn primary', 'Drill this topic');
+    var drillBtn = el('a', 'btn primary', icon('zap') + 'Practise this topic');
     drillBtn.href = '#/drill/' + id;
     cta.appendChild(drillBtn);
+    var custom = el('a', 'btn', 'Customise');
+    custom.href = '#/practice/' + id;
+    cta.appendChild(custom);
     cta.appendChild(el('span', 'btn', st.seen + ' of ' + st.total + ' attempted, ' + st.ok + ' right'));
     main.appendChild(cta);
 
@@ -1108,35 +1263,18 @@
     renderList();
   }
 
-  /* ---------------- drill ---------------- */
+  /* ---------------- practice sessions ---------------- */
 
-  var drill = null;
+  // One engine for every way of practising. Tutor mode marks each question as
+  // it is answered (UWorld's tutor mode); exam mode holds the marks back until
+  // the set is submitted, with a clock running. The session lives in S so it
+  // survives a reload or a detour to the reference.
 
-  function viewDrill(scope) {
-    markNav('/drill/' + scope);
-    var pool;
-    var title;
+  var sessTimer = null;
 
-    if (scope === 'all') {
-      pool = QS.filter(function (q) { return q.answer; });
-      title = 'Mixed drill';
-    } else if (scope === 'weak') {
-      var ids = weakest().map(function (w) { return w.id; });
-      pool = QS.filter(function (q) { return ids.indexOf(q.topic) > -1; });
-      title = 'Weak spots';
-    } else {
-      pool = questionsFor(scope);
-      title = TOPIC[scope] ? TOPIC[scope].name : scope;
-    }
-
-    if (!pool.length) {
-      main.innerHTML = '<div class="empty"><b>No questions to drill</b><span>Try a different topic.</span></div>';
-      return;
-    }
-    remember('#/drill/' + scope, scope === 'all' || scope === 'weak' ? title : title + ' drill');
-
-    // unseen before seen, and inside that, questions that mark themselves come
-    // first so the drill keeps giving feedback for as long as it can
+  // unseen before seen, and inside that, questions that mark themselves come
+  // first so practice keeps giving feedback for as long as it can
+  function orderPool(pool) {
     function bucket(q) {
       var seen = result(q.id) ? 4 : 0;
       if (q.kind === 'structured') return seen + 3;
@@ -1147,223 +1285,676 @@
       var b = bucket(q);
       (buckets[b] = buckets[b] || []).push(q);
     });
-    var order = Object.keys(buckets).sort(function (a, b) { return a - b; })
+    return Object.keys(buckets).sort(function (a, b) { return a - b; })
       .reduce(function (acc, k) { return acc.concat(shuffle(buckets[k])); }, []);
-
-    drill = { order: order, i: 0, title: title, right: 0, wrong: 0, done: 0 };
-    renderDrill();
   }
 
-  function drillTally() {
-    return '<span class="tally"><b class="ok">' + drill.right + ' right</b>' +
-      (drill.wrong ? ' <span class="muted">/</span> <b class="no">' + drill.wrong + ' wrong</b>' : '') + '</span>';
+  function startSession(opts) {
+    var old = S.session;
+    if (old && !old.done && old.mode === 'exam' && Object.keys(old.ans).length &&
+        !confirm('You have an exam set in progress that has not been submitted. Start a new one and drop it?')) return;
+    S.session = {
+      title: opts.title, mode: opts.mode || 'tutor', ids: opts.qs.map(function (q) { return q.id; }),
+      i: 0, ans: {}, spent: 0, started: Date.now(), done: false
+    };
+    save();
+    if (location.hash === '#/session') route(); else location.hash = '#/session';
   }
 
-  function renderDrill() {
-    if (!drill) return;
-    if (drill.i >= drill.order.length) return renderDrillEnd();
+  // the old one-click entry points, kept so existing links and bookmarks work
+  function viewDrill(scope) {
+    var pool, title;
+    if (scope === 'all') {
+      pool = orderPool(QS.filter(function (q) { return q.answer; })).slice(0, 20);
+      title = 'Quick 20';
+    } else if (scope === 'weak') {
+      var ids = weakest().map(function (w) { return w.id; });
+      pool = orderPool(QS.filter(function (q) { return ids.indexOf(q.topic) > -1; })).slice(0, 20);
+      title = 'Weak spots';
+    } else if (scope === 'review') {
+      pool = dueQuestions();
+      if (!pool.length) pool = mistakes().concat(flagged().filter(function (q) { var r = result(q.id); return !r || r.s !== 'wrong'; }));
+      pool = shuffle(pool);
+      title = 'Review';
+    } else {
+      pool = orderPool(questionsFor(scope));
+      title = TOPIC[scope] ? TOPIC[scope].name : scope;
+    }
+    if (!pool.length) {
+      main.innerHTML = '<div class="empty">' + icon('inbox') + '<b>Nothing to practise here</b><span>Try another topic, or build a set.</span></div>';
+      return;
+    }
+    remember('#/drill/' + scope, title);
+    startSession({ title: title, qs: pool, mode: 'tutor' });
+  }
 
-    var q = drill.order[drill.i];
-    drill._pick = null;
+  function stopClock() {
+    clearInterval(sessTimer);
+    sessTimer = null;
+  }
+
+  function fmtTime(ms) {
+    var t = Math.round(ms / 1000), h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+    return (h ? h + ':' + ('0' + m).slice(-2) : m) + ':' + ('0' + sec).slice(-2);
+  }
+
+  function sessionState(ss, id) {
+    var a = ss.ans[id];
+    if (!a) return '';
+    if (ss.mode === 'exam' && !ss.done) return 'done';
+    return a.s === 'correct' ? 'ok' : a.s === 'wrong' ? 'no' : 'done';
+  }
+
+  function viewSession() {
+    var ss = S.session;
+    markNav('/practice');
+    if (!ss) { location.hash = '#/practice'; return; }
+    if (ss.done) return renderResults();
+
+    var q = QBY[ss.ids[ss.i]];
+    var a = ss.ans[q.id] || null;
+    var locked = ss.mode === 'tutor' && !!a; // tutor answers are final
     main.innerHTML = '';
 
     var wrap = el('div', 'drill-wrap');
 
-    var crumb = el('div', 'crumb',
-      '<a href="#/">Overview</a> <span>/</span> <span>' + esc(drill.title) + '</span>');
-    wrap.appendChild(crumb);
+    // header: title, mode, clock, end
+    var head = el('div', 'sess-head');
+    head.innerHTML =
+      '<div class="sess-title"><b>' + esc(ss.title) + '</b>' +
+      '<span class="mode-badge ' + ss.mode + '">' + (ss.mode === 'exam' ? 'Exam mode' : 'Tutor mode') + '</span></div>' +
+      '<span class="sess-clock" aria-live="off">' + icon('clock') + '<span id="sess-time">' + fmtTime(ss.spent) + '</span></span>';
+    var endBtn = el('button', 'btn small', ss.mode === 'exam' ? 'Submit' : 'End session');
+    endBtn.addEventListener('click', finishSession);
+    head.appendChild(endBtn);
+    wrap.appendChild(head);
 
-    var bar = el('div', 'drill-bar');
-    var pct = Math.round((drill.i / drill.order.length) * 100);
-    bar.innerHTML =
-      '<span class="mono">' + (drill.i + 1) + ' / ' + drill.order.length + '</span>' +
-      '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
-      drillTally();
-    wrap.appendChild(bar);
+    // navigator: every question as a numbered square, coloured by state
+    var answered = Object.keys(ss.ans).length;
+    var nav = el('div', 'qnav');
+    nav.setAttribute('aria-label', 'Questions in this set');
+    ss.ids.forEach(function (id, n) {
+      var b = el('button', 'qn ' + sessionState(ss, id) + (n === ss.i ? ' cur' : '') + (S.flags[id] ? ' flag' : ''), String(n + 1));
+      b.title = 'Question ' + (n + 1);
+      if (n === ss.i) b.setAttribute('aria-current', 'step');
+      b.addEventListener('click', function () { go(n); });
+      nav.appendChild(b);
+    });
+    var navWrap = el('div', 'qnav-wrap');
+    navWrap.appendChild(el('div', 'qnav-meta',
+      '<span>Question <b>' + (ss.i + 1) + '</b> of ' + ss.ids.length + '</span>' +
+      '<span>' + answered + ' answered' + (ss.mode === 'tutor' ? tutorTally(ss) : '') + '</span>'));
+    navWrap.appendChild(nav);
+    wrap.appendChild(navWrap);
 
     var card = el('div', 'drill-card');
-
     var kick = el('div', 'drill-kicker');
     kick.innerHTML =
       '<span class="q-tag ' + paperLabel(q) + '">' + q.year + ' p' + q.paper + ' q' + q.n + '</span>' +
       '<span class="pill marks">' + q.marks + (q.marks === 1 ? ' mark' : ' marks') + '</span>' +
-      (q.figure && !FIGURES[q.id] && q.kind !== 'structured'
-        ? '<span class="pill fig">has a diagram</span>' : '') +
+      (q.figure && !FIGURES[q.id] && q.kind !== 'structured' ? '<span class="pill fig">has a diagram</span>' : '') +
       '<span class="pill">' + esc(TOPIC[q.topic] ? TOPIC[q.topic].name : q.topic) + '</span>';
     card.appendChild(kick);
 
-    var dSplit = splitFigureText(q.kind === 'structured' ? q.body : q.stem);
-    card.appendChild(el('p', 'drill-stem', chem(dSplit.prose)));
-    var dFig = figureFor(q);
-    if (dFig) card.appendChild(dFig);
-    if (dSplit.figure) {
-      var dDet = el('details', 'figtext');
-      dDet.innerHTML = '<summary>text lifted out of the diagram</summary>' +
-        '<div class="figtext-body">' + chem(dSplit.figure) + '</div>';
-      card.appendChild(dDet);
+    var split = splitFigureText(q.kind === 'structured' ? q.body : q.stem);
+    card.appendChild(el('p', 'drill-stem', chem(split.prose)));
+    var fig = figureFor(q);
+    if (fig) card.appendChild(fig);
+    if (split.figure) {
+      var det = el('details', 'figtext');
+      det.innerHTML = '<summary>text lifted out of the diagram</summary><div class="figtext-body">' + chem(split.figure) + '</div>';
+      card.appendChild(det);
     }
-
     if (q.figure && !FIGURES[q.id]) {
       card.appendChild(el('p', 'note warn', q.kind === 'structured'
         ? 'Work this one from the paper page below, where the diagrams and tables are.'
         : 'Part of this question is a diagram. Open the paper page to see it.'));
     }
 
-    var foot = el('div', 'drill-foot');
+    var after = el('div', 'sess-after');
 
     if (q.kind === 'structured') {
       card.appendChild(workPad(q));
-      var dsb = schemeBlock(q);
-      if (dsb) card.appendChild(dsb);
-      var deb = examinerBlock(q);
-      if (deb) card.appendChild(deb);
+      var sb = schemeBlock(q);
+      if (sb) card.appendChild(sb);
+      var eb = examinerBlock(q);
+      if (eb) card.appendChild(eb);
       card.appendChild(selfMarkRow(q, function () {
-        var rr = result(q.id);
-        if (rr && rr.s === 'correct') drill.right++; else drill.wrong++;
-        drill.done++;
-        advance(true);
+        var r = result(q.id);
+        ss.ans[q.id] = { pick: r.pick, s: r.s };
+        save();
+        viewSession();
       }));
     } else {
-      var optWrap = el('div', 'opts');
-      var answered = false;
+      var opts = el('div', 'opts');
       ['A', 'B', 'C', 'D'].forEach(function (k) {
         var b = el('button', 'opt');
         b.dataset.key = k;
         b.innerHTML = '<span class="k">' + k + '</span><span>' + chem(q.options[k]) + '</span>';
-        b.addEventListener('click', function () { pick(k); });
-        optWrap.appendChild(b);
-      });
-      card.appendChild(optWrap);
-
-      function pick(k) {
-        if (answered) return;
-        answered = true;
-        var right = q.answer && k === q.answer;
-        Array.prototype.forEach.call(optWrap.children, function (b) {
+        if (locked) {
           b.disabled = true;
-          if (q.answer && b.dataset.key === q.answer) b.classList.add('right');
-          if (b.dataset.key === k && !right) b.classList.add(q.answer ? 'mistake' : 'picked');
-        });
-        if (q.answer) {
-          setResult(q.id, right ? 'correct' : 'wrong', k);
-          if (right) drill.right++; else drill.wrong++;
-          foot.insertBefore(el('span', 'verdict ' + (right ? 'ok' : 'no'),
-            right ? 'Right.' : 'Not this time.'), foot.firstChild);
-        } else {
-          foot.insertBefore(el('span', 'verdict', 'No key on file.'), foot.firstChild);
+          if (q.answer && k === q.answer) b.classList.add('right');
+          if (a.pick === k && q.answer && k !== q.answer) b.classList.add('mistake');
+          if (a.pick === k && !q.answer) b.classList.add('picked');
+        } else if (a && a.pick === k) {
+          b.classList.add('picked');
+          b.setAttribute('aria-pressed', 'true');
         }
-        drill.done++;
-        var tallyEl = $('.tally', bar);
-        if (tallyEl) tallyEl.outerHTML = drillTally();
-        nextBtn.classList.add('primary');
-        nextBtn.focus();
-      }
-      drill._pick = pick;
-    }
+        b.addEventListener('click', function () { pick(k); });
+        opts.appendChild(b);
+      });
+      card.appendChild(opts);
 
-    // a question worth coming back to should be one press away, mid-drill
-    var flagBtn = el('button', 'btn small', icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag'));
+      if (locked && q.answer) {
+        var ok = a.s === 'correct';
+        after.appendChild(el('div', 'verdict-row ' + (ok ? 'ok' : 'no'),
+          '<span class="verdict ' + (ok ? 'ok' : 'no') + '">' + icon(ok ? 'check' : 'x') +
+          (ok ? 'Correct' : 'Incorrect. The answer is ' + q.answer + '.') + '</span>'));
+        after.appendChild(confidenceRow(q, a));
+      } else if (locked && !q.answer) {
+        after.appendChild(el('p', 'note', 'No answer key for this paper is in the archive. Check it against the paper, then say how it went.'));
+        after.appendChild(selfCheckRow(q, function () {
+          var r = result(q.id);
+          a.s = r.s;
+          save();
+          viewSession();
+        }));
+      }
+    }
+    card.appendChild(after);
+
+    // footer: sources, flag, previous and next
+    var foot = el('div', 'drill-foot');
+    var src = pdfHref(q.src, q.page);
+    if (src) {
+      var sa = el('a', 'srclink', icon('out') + 'paper, p. ' + q.page);
+      sa.href = src; sa.target = '_blank'; sa.rel = 'noopener';
+      foot.appendChild(sa);
+    }
+    if (q.ms && (ss.mode === 'tutor')) {
+      var ma = el('a', 'srclink', icon('out') + 'mark scheme');
+      ma.href = pdfHref(q.ms); ma.target = '_blank'; ma.rel = 'noopener';
+      foot.appendChild(ma);
+    }
+    foot.appendChild(reportLink(q, 'report'));
+    foot.appendChild(el('span', 'spacer'));
+
+    var flagBtn = el('button', 'btn small' + (S.flags[q.id] ? ' is-on' : ''), icon('flag') + (S.flags[q.id] ? 'Flagged' : 'Flag'));
     flagBtn.setAttribute('aria-pressed', String(!!S.flags[q.id]));
     function toggleFlag() {
       if (S.flags[q.id]) delete S.flags[q.id]; else S.flags[q.id] = true;
-      flagBtn.innerHTML = icon('flag') + (S.flags[q.id] ? 'flagged' : 'flag');
-      flagBtn.setAttribute('aria-pressed', String(!!S.flags[q.id]));
-      toast(S.flags[q.id] ? 'added to your review pile' : 'flag removed');
-      save(); refreshChrome();
+      toast(S.flags[q.id] ? 'flagged for review' : 'flag removed');
+      save(); refreshChrome(); viewSession();
     }
     flagBtn.addEventListener('click', toggleFlag);
-    drill._flag = toggleFlag;
-
-    var src = pdfHref(q.src, q.page);
-    if (src) {
-      var a = el('a', 'srclink', icon('out') + 'page ' + q.page + ' of the paper');
-      a.href = src; a.target = '_blank'; a.rel = 'noopener';
-      foot.appendChild(a);
-    }
-    if (q.ms) {
-      var m = el('a', 'srclink', icon('out') + 'mark scheme');
-      m.href = pdfHref(q.ms); m.target = '_blank'; m.rel = 'noopener';
-      foot.appendChild(m);
-    }
-    foot.appendChild(el('span', 'spacer'));
-    foot.appendChild(el('span', 'kbd-hint',
-      (q.kind === 'structured' ? '' : '<kbd>a</kbd> to <kbd>d</kbd> answer, ') +
-      '<kbd>f</kbd> flag, <kbd>enter</kbd> next'));
     foot.appendChild(flagBtn);
 
-    var nextBtn = el('button', 'btn', drill.i === drill.order.length - 1 ? 'Finish' : 'Next');
-    nextBtn.addEventListener('click', function () { advance(false); });
-    foot.appendChild(nextBtn);
+    var prev = el('button', 'btn small', icon('chevron-left') + 'Back');
+    prev.disabled = ss.i === 0;
+    prev.addEventListener('click', function () { go(ss.i - 1); });
+    foot.appendChild(prev);
+
+    var last = ss.i === ss.ids.length - 1;
+    var next = el('button', 'btn small' + (a ? ' primary' : ''),
+      last ? (ss.mode === 'exam' ? 'Submit' : 'Finish') : (a ? 'Next' : 'Skip') + icon('chevron-right'));
+    next.addEventListener('click', function () { if (last) finishSession(); else go(ss.i + 1); });
+    foot.appendChild(next);
 
     card.appendChild(foot);
     wrap.appendChild(card);
-    main.appendChild(wrap);
-    // take focus off the button that was just pressed, without scrolling the
-    // drawer or the topbar out of view on a phone
-    main.focus({ preventScroll: true });
 
-    function advance() {
-      drill.i++;
-      renderDrill();
+    wrap.appendChild(el('p', 'kbd-hint sess-keys',
+      (q.kind === 'structured' ? '' : '<kbd>A</kbd>–<kbd>D</kbd> answer · ') +
+      (locked && q.answer ? '<kbd>1</kbd>–<kbd>3</kbd> confidence · ' : '') +
+      '<kbd>F</kbd> flag · <kbd>←</kbd> <kbd>→</kbd> move · <kbd>Enter</kbd> next'));
+
+    main.appendChild(wrap);
+    main.focus({ preventScroll: true });
+    var cur = $('.qn.cur', nav);
+    if (cur && nav.scrollWidth > nav.clientWidth) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
+
+    function pick(k) {
+      if (q.kind === 'structured' || locked) return;
+      if (ss.mode === 'exam') {
+        ss.ans[q.id] = { pick: k };
+        save();
+        viewSession();
+        return;
+      }
+      var s2;
+      if (q.answer) s2 = k === q.answer ? 'correct' : 'wrong';
+      var base = q.answer ? setResult(q.id, s2, k) : 0;
+      ss.ans[q.id] = { pick: k, s: s2 || null, base: base };
+      save();
+      viewSession();
+      if (q.answer) toast(s2 === 'correct' ? 'correct' : 'the answer is ' + q.answer);
     }
-    drill._advance = advance;
+
+    function go(n) {
+      if (n < 0 || n >= ss.ids.length) return;
+      ss.i = n;
+      save();
+      viewSession();
+      window.scrollTo(0, 0);
+    }
+
+    SESS_KEYS = {
+      pick: pick,
+      flag: toggleFlag,
+      prev: function () { go(ss.i - 1); },
+      next: function () { if (last) finishSession(); else go(ss.i + 1); },
+      conf: locked && q.answer ? function (n) {
+        var btn = $('.conf-btns button[data-n="' + n + '"]', main);
+        if (btn) btn.click();
+      } : null
+    };
+
+    // the clock only runs while the set is on screen
+    stopClock();
+    var tick = Date.now();
+    sessTimer = setInterval(function () {
+      if (!S.session || S.session !== ss || location.hash !== '#/session') { stopClock(); return; }
+      var now = Date.now();
+      if (!document.hidden) ss.spent += now - tick;
+      tick = now;
+      var t = $('#sess-time');
+      if (t) t.textContent = fmtTime(ss.spent);
+      save();
+    }, 1000);
   }
 
-  function renderDrillEnd() {
-    var pct = drill.done ? Math.round((drill.right / drill.done) * 100) : 0;
+  var SESS_KEYS = null;
+
+  function tutorTally(ss) {
+    var ok = 0, no = 0;
+    Object.keys(ss.ans).forEach(function (id) {
+      if (ss.ans[id].s === 'correct') ok++;
+      else if (ss.ans[id].s === 'wrong') no++;
+    });
+    return ' · <b class="t-ok">' + ok + ' right</b>' + (no ? ' · <b class="t-no">' + no + ' wrong</b>' : '');
+  }
+
+  // Metacognition step borrowed from Brainscape: a right answer you guessed is
+  // not a right answer you know, so it comes back sooner.
+  function confidenceRow(q, a) {
+    var row = el('div', 'conf');
+    row.appendChild(el('span', 'conf-q', 'How sure were you?'));
+    var btns = el('div', 'conf-btns');
+    [['guess', 'Guessed', 'back tomorrow'], ['unsure', 'Unsure', 'back in a few days'], ['knew', 'Knew it', 'spaced out']]
+      .forEach(function (c, n) {
+        var b = el('button', a.conf === c[0] ? 'on' : null,
+          '<kbd>' + (n + 1) + '</kbd><span>' + c[1] + '</span><i>' + c[2] + '</i>');
+        b.dataset.n = String(n + 1);
+        b.setAttribute('aria-pressed', String(a.conf === c[0]));
+        b.addEventListener('click', function () {
+          a.conf = c[0];
+          rateConfidence(q.id, c[0], a.base || 0);
+          Array.prototype.forEach.call(btns.children, function (x) {
+            x.classList.toggle('on', x === b);
+            x.setAttribute('aria-pressed', String(x === b));
+          });
+        });
+        btns.appendChild(b);
+      });
+    row.appendChild(btns);
+    return row;
+  }
+
+  function finishSession() {
+    var ss = S.session;
+    if (!ss) return;
+    var open = ss.ids.length - Object.keys(ss.ans).length;
+    if (ss.mode === 'exam') {
+      if (!confirm(open ? open + ' question' + (open === 1 ? ' is' : 's are') + ' unanswered. Submit anyway?' : 'Submit and see your marks?')) return;
+      ss.ids.forEach(function (id) {
+        var a = ss.ans[id], q = QBY[id];
+        if (!a) return;
+        a.s = q.answer ? (a.pick === q.answer ? 'correct' : 'wrong') : null;
+        if (a.s) a.base = setResult(id, a.s, a.pick);
+      });
+    } else if (open && ss.i < ss.ids.length - 1 &&
+               !confirm('End now? ' + open + ' question' + (open === 1 ? '' : 's') + ' will be left unanswered.')) {
+      return;
+    }
+    stopClock();
+    ss.done = true;
+    ss.ended = Date.now();
+    save();
+    renderResults();
+    window.scrollTo(0, 0);
+  }
+
+  // UWorld-style report: score, time, then where the marks went by topic.
+  function renderResults() {
+    var ss = S.session;
+    stopClock();
+    SESS_KEYS = null;
     main.innerHTML = '';
-    var wrap = el('div', 'drill-wrap');
-    var card = el('div', 'drill-card');
-    card.innerHTML =
-      '<p class="h-eyebrow">' + esc(drill.title) + '</p>' +
-      '<h1 class="display" style="font-size:32px">' + drill.right + ' out of ' + drill.done + '</h1>' +
-      '<p class="lede">' + (pct >= 80
-        ? 'Solid. Move on to a topic you have not touched yet.'
-        : pct >= 55
-          ? 'Middling. The ones you missed are sitting in your review pile.'
-          : 'Rough round. Read the mark schemes for the ones you missed before drilling again.') + '</p>';
+    var ok = 0, no = 0, byTopic = {};
+    ss.ids.forEach(function (id) {
+      var a = ss.ans[id], q = QBY[id];
+      var t = byTopic[q.topic] = byTopic[q.topic] || { ok: 0, no: 0, n: 0 };
+      t.n++;
+      if (a && a.s === 'correct') { ok++; t.ok++; }
+      else if (a && a.s === 'wrong') { no++; t.no++; }
+    });
+    var marked = ok + no;
+    var pct = marked ? Math.round(ok / marked * 100) : 0;
+    var skipped = ss.ids.length - Object.keys(ss.ans).length;
+
+    var wrap = el('div', 'results');
+    wrap.appendChild(el('div', 'crumb', '<a href="#/practice">Practice</a> <span>/</span> <span>Results</span>'));
+    var head = el('header', 'res-head');
+    head.innerHTML =
+      '<p class="h-eyebrow">' + esc(ss.title) + ' · ' + (ss.mode === 'exam' ? 'exam mode' : 'tutor mode') + '</p>' +
+      '<h1 class="display">' + (marked ? ok + ' of ' + marked + ' correct' : 'Nothing marked') + '</h1>' +
+      '<p class="lede">' + (!marked ? 'Answer a few questions and the report fills in.'
+        : pct >= 80 ? 'Strong set. Move on to a topic you have not touched, or raise the stakes with exam mode.'
+        : pct >= 55 ? 'Getting there. The misses are scheduled for review tomorrow; read their mark schemes first.'
+        : 'A tough set. Go through the misses below with the mark scheme open before trying again.') + '</p>';
+    wrap.appendChild(head);
+
+    var tiles = el('div', 'stat-row res-tiles');
+    tiles.innerHTML =
+      '<div class="stat"><b>' + pct + '%</b><span>score</span></div>' +
+      '<div class="stat"><b>' + fmtTime(ss.spent) + '</b><span>time on task</span></div>' +
+      '<div class="stat"><b>' + (Object.keys(ss.ans).length ? fmtTime(ss.spent / Object.keys(ss.ans).length) : '–') + '</b><span>per question</span></div>' +
+      '<div class="stat"><b>' + skipped + '</b><span>skipped</span></div>';
+    wrap.appendChild(tiles);
+
     var row = el('div', 'cta-row');
-    var again = el('button', 'btn primary', icon('again') + 'Go again');
-    again.addEventListener('click', function () { viewDrill(location.hash.split('/')[2] || 'all'); });
-    row.appendChild(again);
-    var rev = el('a', 'btn', 'Review what you missed');
-    rev.href = '#/review';
-    row.appendChild(rev);
-    var home = el('a', 'btn', 'Back to topics');
+    var wrongIds = ss.ids.filter(function (id) { return ss.ans[id] && ss.ans[id].s === 'wrong'; });
+    if (wrongIds.length) {
+      var retry = el('button', 'btn primary', icon('again') + 'Retry the ' + wrongIds.length + ' you missed');
+      retry.addEventListener('click', function () {
+        startSession({ title: 'Retry: ' + ss.title, mode: 'tutor', qs: wrongIds.map(function (id) { return QBY[id]; }) });
+      });
+      row.appendChild(retry);
+    }
+    var fresh = el('a', 'btn' + (wrongIds.length ? '' : ' primary'), icon('zap') + 'New practice set');
+    fresh.href = '#/practice';
+    row.appendChild(fresh);
+    var home = el('a', 'btn', 'Home');
     home.href = '#/';
     row.appendChild(home);
-    card.appendChild(row);
-    wrap.appendChild(card);
+    wrap.appendChild(row);
+
+    var topics = Object.keys(byTopic).sort(function (x, y) {
+      var a = byTopic[x], b = byTopic[y];
+      var ra = a.ok + a.no ? a.ok / (a.ok + a.no) : 2, rb = b.ok + b.no ? b.ok / (b.ok + b.no) : 2;
+      return ra - rb;
+    });
+    var sec = el('section', 'res-sec');
+    sec.innerHTML = '<div class="sec-head"><div><h2 class="sec">By topic</h2><p>Weakest first.</p></div></div>';
+    var tbl = el('div', 'topic-perf');
+    topics.forEach(function (id) {
+      var t = byTopic[id], m = t.ok + t.no;
+      var p = m ? Math.round(t.ok / m * 100) : null;
+      var r = el('a', 'tp-row');
+      r.href = '#/topic/' + id;
+      r.innerHTML = '<span class="tp-name">' + esc(TOPIC[id] ? TOPIC[id].name : id) + '</span>' +
+        '<span class="tp-bar"><i class="ok" style="width:' + (m ? t.ok / t.n * 100 : 0) + '%"></i><i class="no" style="width:' + (m ? t.no / t.n * 100 : 0) + '%"></i></span>' +
+        '<span class="tp-n">' + t.ok + '/' + t.n + '</span>' +
+        '<span class="tp-p ' + (p == null ? '' : p >= 70 ? 'ok' : p >= 50 ? 'mid' : 'no') + '">' + (p == null ? '–' : p + '%') + '</span>';
+      tbl.appendChild(r);
+    });
+    sec.appendChild(tbl);
+    wrap.appendChild(sec);
+
+    var qsec = el('section', 'res-sec');
+    qsec.innerHTML = '<div class="sec-head"><div><h2 class="sec">Every question</h2><p>Open one to see the answer, the mark scheme and the paper.</p></div></div>';
+    var list = el('div', 'qlist');
+    ss.ids.forEach(function (id) { list.appendChild(questionCard(QBY[id])); });
+    qsec.appendChild(list);
+    wrap.appendChild(qsec);
+
     main.appendChild(wrap);
-    drill = null;
   }
 
-  /* ---------------- review + papers ---------------- */
+  /* ---------------- practice builder ---------------- */
+
+  // UWorld's "create test" and Save My Exams' target tests: choose topics, which
+  // questions, how many, and whether marks come now or at the end.
+  var POOLS = [
+    ['unused', 'Not tried'], ['due', 'Due for review'], ['wrong', 'Got wrong'], ['flagged', 'Flagged'], ['all', 'Everything']
+  ];
+
+  function builderState() {
+    var b = S.builder || {};
+    return {
+      mode: b.mode || 'tutor',
+      pool: b.pool || 'unused',
+      kind: b.kind || 'mcq',
+      n: b.n || 20,
+      topics: b.topics && b.topics.length ? b.topics.slice() : Object.keys(TOPIC)
+    };
+  }
+
+  function builderMatches(b, topicFilter) {
+    var now = Date.now();
+    return QS.filter(function (q) {
+      if (topicFilter !== false && b.topics.indexOf(q.topic) < 0) return false;
+      if ((b.mode === 'exam' || b.kind === 'mcq') && !(q.kind !== 'structured' && q.answer)) return false;
+      var r = result(q.id);
+      if (b.pool === 'unused') return !r;
+      if (b.pool === 'wrong') return r && r.s === 'wrong';
+      if (b.pool === 'flagged') return !!S.flags[q.id];
+      if (b.pool === 'due') return isDue(q, now);
+      return true;
+    });
+  }
+
+  function viewPractice(preset) {
+    markNav('/practice');
+    var b = builderState();
+    if (preset && TOPIC[preset]) { b.topics = [preset]; b.pool = 'all'; }
+
+    function persist() { S.builder = b; save(); }
+
+    main.innerHTML = '';
+    var wrap = el('div', 'builder');
+    wrap.appendChild(el('div', 'crumb', '<a href="#/">Overview</a> <span>/</span> <span>Practice</span>'));
+    var head = el('header');
+    head.innerHTML =
+      '<p class="h-eyebrow">practice</p>' +
+      '<h1 class="display" style="font-size:clamp(26px,3.4vw,36px)">Build a practice set</h1>' +
+      '<p class="lede">Pick what to work on and how. Retrieval under test conditions is the most effective way to revise that there is, so the defaults favour questions you have not seen.</p>';
+    wrap.appendChild(head);
+
+    // quick starts for when choosing is the obstacle
+    var quick = el('div', 'quick-row');
+    var due = dueQuestions().length;
+    quick.innerHTML =
+      '<a class="quick" href="#/drill/all">' + icon('zap') + '<span><b>Quick 20</b><i>Auto-marked, unseen first</i></span></a>' +
+      '<a class="quick' + (due ? '' : ' is-empty') + '" href="#/drill/review">' + icon('again') + '<span><b>Review due</b><i>' + (due ? due + ' question' + (due === 1 ? '' : 's') + ' waiting' : 'Nothing due today') + '</i></span></a>' +
+      (weakest().length ? '<a class="quick" href="#/drill/weak">' + icon('target') + '<span><b>Weak spots</b><i>Your three lowest topics</i></span></a>' : '');
+    wrap.appendChild(quick);
+
+    var form = el('div', 'pb');
+
+    // 1. mode
+    var modeSec = section('1', 'Mode');
+    var modes = el('div', 'radio-cards');
+    [['tutor', 'Tutor', 'Marked after every question, with the answer, mark scheme and a confidence check. Best for learning a topic.'],
+     ['exam', 'Exam', 'Timed. Nothing is marked until you submit, then you get a full report. Uses auto-marked questions only. Best for checking you are ready.']]
+      .forEach(function (m) {
+        var c = el('button', 'rcard' + (b.mode === m[0] ? ' on' : ''),
+          '<span class="rc-dot"></span><span><b>' + m[1] + '</b><i>' + m[2] + '</i></span>');
+        c.setAttribute('role', 'radio');
+        c.setAttribute('aria-checked', String(b.mode === m[0]));
+        c.addEventListener('click', function () { b.mode = m[0]; persist(); redraw(); });
+        modes.appendChild(c);
+      });
+    modeSec.appendChild(modes);
+    form.appendChild(modeSec);
+
+    // 2. which questions
+    var poolSec = section('2', 'Questions');
+    var seg = el('div', 'seg');
+    seg.setAttribute('role', 'radiogroup');
+    POOLS.forEach(function (p) {
+      var n = builderMatches({ mode: b.mode, kind: b.kind, pool: p[0], topics: b.topics }).length;
+      var o = el('button', 'seg-o' + (b.pool === p[0] ? ' on' : ''), esc(p[1]) + '<span>' + n + '</span>');
+      o.setAttribute('role', 'radio');
+      o.setAttribute('aria-checked', String(b.pool === p[0]));
+      o.addEventListener('click', function () { b.pool = p[0]; persist(); redraw(); });
+      seg.appendChild(o);
+    });
+    poolSec.appendChild(seg);
+    var kinds = el('label', 'check-line' + (b.mode === 'exam' ? ' is-disabled' : ''));
+    kinds.innerHTML = '<input type="checkbox"' + (b.kind === 'all' && b.mode !== 'exam' ? ' checked' : '') +
+      (b.mode === 'exam' ? ' disabled' : '') + '> Include structured questions and ones without an answer key (you mark those yourself)';
+    $('input', kinds).addEventListener('change', function (e) { b.kind = e.target.checked ? 'all' : 'mcq'; persist(); redraw(); });
+    poolSec.appendChild(kinds);
+    form.appendChild(poolSec);
+
+    // 3. topics
+    var topSec = section('3', 'Topics');
+    var tools = el('div', 'topic-tools');
+    var allB = el('button', 'chip', 'All'), noneB = el('button', 'chip', 'None');
+    allB.addEventListener('click', function () { b.topics = Object.keys(TOPIC); persist(); redraw(); });
+    noneB.addEventListener('click', function () { b.topics = []; persist(); redraw(); });
+    tools.appendChild(allB); tools.appendChild(noneB);
+    if (weakest().length) {
+      var wk = el('button', 'chip', 'My weakest');
+      wk.addEventListener('click', function () { b.topics = weakest().map(function (w) { return w.id; }); persist(); redraw(); });
+      tools.appendChild(wk);
+    }
+    tools.appendChild(el('span', 'muted', b.topics.length + ' of ' + Object.keys(TOPIC).length + ' selected'));
+    topSec.appendChild(tools);
+
+    var units = el('div', 'unit-cols');
+    UNITS.forEach(function (u) {
+      var box = el('fieldset', 'unit-box');
+      var ids = u.topics.map(function (t) { return t.id; });
+      var on = ids.filter(function (id) { return b.topics.indexOf(id) > -1; }).length;
+      var lg = el('legend');
+      lg.innerHTML = '<label class="check-line strong"><input type="checkbox"' + (on === ids.length ? ' checked' : '') + '> ' + esc(u.name) + '</label>';
+      var master = $('input', lg);
+      master.indeterminate = on > 0 && on < ids.length;
+      master.addEventListener('change', function () {
+        b.topics = b.topics.filter(function (id) { return ids.indexOf(id) < 0; });
+        if (master.checked) b.topics = b.topics.concat(ids);
+        persist(); redraw();
+      });
+      box.appendChild(lg);
+      u.topics.forEach(function (t) {
+        var n = builderMatches({ mode: b.mode, kind: b.kind, pool: b.pool, topics: [t.id] }).length;
+        var l = el('label', 'check-line' + (n ? '' : ' is-zero'));
+        l.innerHTML = '<input type="checkbox"' + (b.topics.indexOf(t.id) > -1 ? ' checked' : '') + '> <span>' + esc(t.name) + '</span><em>' + n + '</em>';
+        $('input', l).addEventListener('change', function (e) {
+          if (e.target.checked) b.topics.push(t.id);
+          else b.topics = b.topics.filter(function (x) { return x !== t.id; });
+          persist(); redraw();
+        });
+        box.appendChild(l);
+      });
+      units.appendChild(box);
+    });
+    topSec.appendChild(units);
+    form.appendChild(topSec);
+
+    // 4. length
+    var lenSec = section('4', 'Length');
+    var lseg = el('div', 'seg');
+    [10, 20, 40, 0].forEach(function (n) {
+      var o = el('button', 'seg-o' + (b.n === n || (!n && b.n === 0) ? ' on' : ''), n ? n + ' questions' : 'All matching');
+      o.addEventListener('click', function () { b.n = n; persist(); redraw(); });
+      lseg.appendChild(o);
+    });
+    lenSec.appendChild(lseg);
+    form.appendChild(lenSec);
+    wrap.appendChild(form);
+
+    // sticky summary and start
+    var matches = builderMatches(b);
+    var count = b.n ? Math.min(b.n, matches.length) : matches.length;
+    var bar = el('div', 'pb-bar');
+    bar.innerHTML = '<div><b>' + count + ' question' + (count === 1 ? '' : 's') + '</b><span>' +
+      (b.mode === 'exam' ? 'Exam mode, timed, marked at the end' : 'Tutor mode, marked as you go') + '</span></div>';
+    var start = el('button', 'btn primary', 'Start ' + (b.mode === 'exam' ? 'exam' : 'practice') + icon('chevron-right'));
+    start.disabled = !count;
+    start.addEventListener('click', function () {
+      var qs = (b.pool === 'unused' || b.pool === 'all' ? orderPool(matches) : shuffle(matches)).slice(0, count);
+      var title = b.topics.length === 1 ? TOPIC[b.topics[0]].name
+        : b.topics.length === Object.keys(TOPIC).length ? 'Mixed practice' : b.topics.length + ' topics';
+      remember('#/practice', 'Practice');
+      startSession({ title: title, mode: b.mode, qs: qs });
+    });
+    bar.appendChild(start);
+    if (!count) bar.appendChild(el('p', 'pb-empty', 'No questions match. Widen the topics or pick a different set of questions.'));
+    wrap.appendChild(bar);
+
+    main.appendChild(wrap);
+
+    function redraw() {
+      var y = window.scrollY;
+      viewPractice();
+      window.scrollTo(0, y);
+    }
+    function section(n, title) {
+      var sct = el('section', 'pb-sec');
+      sct.appendChild(el('h2', 'pb-h', '<span>' + n + '</span>' + title));
+      return sct;
+    }
+  }
+
+  /* ---------------- review ---------------- */
+
+  var reviewTab = 'due';
 
   function viewReview() {
     markNav('/review');
-    var qs = wrongQuestions();
+    var due = dueQuestions(), wrong = mistakes(), flags = flagged();
     main.innerHTML = '';
     main.appendChild(el('div', 'crumb', '<a href="#/">Overview</a> <span>/</span> <span>Review</span>'));
     var head = el('header');
     head.innerHTML =
-      '<p class="h-eyebrow">wrong answers and flags</p>' +
-      '<h1 class="display" style="font-size:clamp(26px,3.4vw,36px)">Your review pile</h1>' +
-      '<p class="lede">Everything you got wrong or flagged, newest first. Clearing this list is the whole game.</p>';
+      '<p class="h-eyebrow">spaced review</p>' +
+      '<h1 class="display" style="font-size:clamp(26px,3.4vw,36px)">Review</h1>' +
+      '<p class="lede">Questions you miss, or get right by guessing, come back after 1, 3, 7, 16 and then 35 days. Answer them well and they space out; miss one and it starts again. A little each day beats a lot the night before.</p>';
     main.appendChild(head);
 
+    var sched = el('div', 'sched');
+    sched.innerHTML =
+      '<div><b>' + due.length + '</b><span>due now</span></div>' +
+      '<div><b>' + upcoming(1) + '</b><span>by tomorrow</span></div>' +
+      '<div><b>' + upcoming(7) + '</b><span>this week</span></div>' +
+      '<div><b>' + Object.keys(S.srs).length + '</b><span>in rotation</span></div>';
+    main.appendChild(sched);
+
+    var tabs = el('div', 'tabs');
+    tabs.setAttribute('role', 'tablist');
+    var sets = { due: due, wrong: wrong, flagged: flags };
+    [['due', 'Due now'], ['wrong', 'Mistakes'], ['flagged', 'Flagged']].forEach(function (t) {
+      var b = el('button', 'tab' + (reviewTab === t[0] ? ' on' : ''), t[1] + '<span>' + sets[t[0]].length + '</span>');
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(reviewTab === t[0]));
+      b.addEventListener('click', function () { reviewTab = t[0]; viewReview(); });
+      tabs.appendChild(b);
+    });
+    main.appendChild(tabs);
+
+    var qs = sets[reviewTab];
     if (!qs.length) {
-      main.appendChild(el('div', 'empty', icon('inbox') + '<b>Empty pile</b><span>Nothing wrong and nothing flagged.</span>'));
+      var msg = {
+        due: ['Nothing due', upcoming(7) ? 'Come back tomorrow; ' + upcoming(7) + ' more fall due this week.' : 'Miss a question or mark one as a guess and it will be scheduled here.'],
+        wrong: ['No mistakes on record', 'Everything you have answered, you got right.'],
+        flagged: ['Nothing flagged', 'Press F on any question to keep it here.']
+      }[reviewTab];
+      main.appendChild(el('div', 'empty', icon('inbox') + '<b>' + msg[0] + '</b><span>' + msg[1] + '</span>'));
       return;
     }
 
     var cta = el('div', 'cta-row');
-    var d = el('a', 'btn primary', 'Drill the pile');
-    d.href = '#/drill/review';
+    var d = el('button', 'btn primary', icon('zap') + (qs.length === 1 ? 'Practise it' : 'Practise these ' + qs.length));
+    d.addEventListener('click', function () {
+      startSession({ title: { due: 'Review', wrong: 'Mistakes', flagged: 'Flagged' }[reviewTab], mode: 'tutor', qs: shuffle(qs) });
+    });
     cta.appendChild(d);
     main.appendChild(cta);
 
-    qs.sort(function (a, b) {
+    qs = qs.slice().sort(function (a, b) {
       var ra = result(a.id), rb = result(b.id);
       return (rb ? rb.at : 0) - (ra ? ra.at : 0);
     });
@@ -1372,6 +1963,8 @@
     qs.forEach(function (q) { list.appendChild(questionCard(q)); });
     main.appendChild(list);
   }
+
+  /* ---------------- papers ---------------- */
 
   function viewPapers() {
     markNav('/papers');
@@ -1641,16 +2234,10 @@
 
     if (!parts.length) return viewHome();
     if (parts[0] === 'topic') return viewTopic(parts[1]);
-    if (parts[0] === 'drill') {
-      if (parts[1] === 'review') {
-        var qs = wrongQuestions();
-        if (!qs.length) return viewReview();
-        drill = { order: shuffle(qs), i: 0, title: 'Review pile', right: 0, wrong: 0, done: 0 };
-        markNav('/review');
-        return renderDrill();
-      }
-      return viewDrill(parts[1] || 'all');
-    }
+    if (parts[0] !== 'session') { stopClock(); SESS_KEYS = null; }
+    if (parts[0] === 'drill') return viewDrill(parts[1] || 'all');
+    if (parts[0] === 'session') return viewSession();
+    if (parts[0] === 'practice') return viewPractice(parts[1]);
     if (parts[0] === 'goals') return viewGoals();
     if (parts[0] === 'goal') return viewGoal(parts.slice(1).join('/'));
     if (parts[0] === 'review') return viewReview();
@@ -1667,22 +2254,22 @@
   // demo, which is a live question so the marking states can be tried safely.
   var TOUR = [
     { target: '#nav', place: 'right', icon: 'house', title: 'Topics live in the sidebar',
-      body: 'The 25 units of the syllabus, each with the number of past paper questions filed under it. Above them: the overview, a mixed drill that picks questions for you, the syllabus objectives and the reference.',
+      body: 'The 25 units of the syllabus, each with the number of past paper questions filed under it. Above them: the overview, the practice builder, your review, the syllabus objectives and the reference.',
       mobileTarget: '#side-toggle', mobileIcon: 'menu', mobileTitle: 'Topics live behind this button',
-      mobileBody: 'It opens the 25 units of the syllabus, each with the number of past paper questions filed under it, plus the mixed drill, the syllabus objectives and the reference.' },
+      mobileBody: 'It opens the 25 units of the syllabus, each with the number of past paper questions filed under it, plus practice, review, the syllabus objectives and the reference.' },
     { target: '#search', mobileTarget: '#search-toggle', icon: 'search', title: 'Search anything',
       body: 'A formula, a reagent, a topic, a phrase from a mark scheme. Results include the reference entries. Press / to jump here from anywhere.' },
     { demo: true, icon: 'check', title: 'Try one',
       body: 'A real question from the 2024 paper. Pick an answer and see how marking looks. Nothing you do here is recorded.' },
-    { target: '.tb-link[href="#/review"]', icon: 'flag', title: 'The review pile',
-      body: 'Everything you get wrong or flag lands here, newest first, and you can drill just the pile. Clearing it is the whole game.' },
+    { target: '.tb-link[href="#/review"]', mobileTarget: '.tab-item[href="#/review"]', icon: 'again', title: 'Spaced review',
+      body: 'Anything you miss, or get right by guessing, comes back after 1, 3, 7, 16 and 35 days. The badge shows what is due today. Flags live here too.' },
     { target: '.tb-link[href="#/goals"]', icon: 'list', title: 'Syllabus objectives',
       body: 'All 304 learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it.',
       mobileBody: 'All 304 learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it. On a phone it sits near the top of the menu.' },
     { target: '.tb-link[href="#/reference"]', icon: 'book', title: 'Reference, the справочник',
       body: 'Formulae, definitions, colour changes and the data booklet ion tests, in the wording mark schemes want. Press r from anywhere.' },
     { target: '#help-btn', icon: 'help', title: 'Shortcuts, and this tour',
-      body: 'a to d answer, f flag, enter next, / search, r reference, ? reopens this tour. It will not appear on its own again.' }
+      body: 'a to d answer, 1 to 3 rate confidence, f flag, arrows or enter move, / search, r reference, ? reopens this tour. It will not appear on its own again.' }
   ];
 
   var DEMO = {
@@ -1928,7 +2515,8 @@
 
   $('#reset-btn').addEventListener('click', function () {
     if (!confirm('Clear every answer, note and flag on this device?')) return;
-    S = { results: {}, notes: {}, flags: {}, theme: S.theme, sideHidden: S.sideHidden, tourSeen: true, last: null };
+    S = { results: {}, notes: {}, flags: {}, theme: S.theme, sideHidden: S.sideHidden, tourSeen: true, last: null,
+      srs: {}, days: {}, goal: S.goal, examDate: S.examDate, session: null, builder: null };
     save();
     refreshChrome();
     route();
@@ -1938,7 +2526,7 @@
   // progress lives in this browser only, so a file is the way to carry it to
   // another device or keep it safe
   $('#export-btn').addEventListener('click', function () {
-    var blob = new Blob([JSON.stringify({ results: S.results, notes: S.notes, flags: S.flags, exported: new Date().toISOString() }, null, 1)],
+    var blob = new Blob([JSON.stringify({ results: S.results, notes: S.notes, flags: S.flags, srs: S.srs, days: S.days, exported: new Date().toISOString() }, null, 1)],
       { type: 'application/json' });
     var a = el('a');
     a.href = URL.createObjectURL(blob);
@@ -1962,6 +2550,8 @@
         Object.keys(v.results || {}).forEach(function (k) { S.results[k] = v.results[k]; });
         Object.keys(v.notes || {}).forEach(function (k) { S.notes[k] = v.notes[k]; });
         Object.keys(v.flags || {}).forEach(function (k) { S.flags[k] = v.flags[k]; });
+        Object.keys(v.srs || {}).forEach(function (k) { S.srs[k] = v.srs[k]; });
+        Object.keys(v.days || {}).forEach(function (k) { S.days[k] = Math.max(S.days[k] || 0, v.days[k]); });
         save();
         refreshChrome();
         route();
@@ -2009,11 +2599,14 @@
     if (typing || $('.tour-wrap')) return;
     if (e.key === '?') { e.preventDefault(); showTour(); return; }
     if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) { location.hash = '#/reference'; return; }
-    if (!drill) return;
+    if (!SESS_KEYS || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (/^(BUTTON|A|SUMMARY)$/.test(e.target.tagName) && e.key === 'Enter') return;
     var k = e.key.toLowerCase();
-    if ('abcd'.indexOf(k) > -1 && drill._pick) { e.preventDefault(); drill._pick(k.toUpperCase()); }
-    else if (k === 'f' && drill._flag) { e.preventDefault(); drill._flag(); }
-    else if (e.key === 'Enter' && drill._advance) { e.preventDefault(); drill._advance(); }
+    if ('abcd'.indexOf(k) > -1 && k.length === 1) { e.preventDefault(); SESS_KEYS.pick(k.toUpperCase()); }
+    else if ('123'.indexOf(k) > -1 && k.length === 1 && SESS_KEYS.conf) { e.preventDefault(); SESS_KEYS.conf(+k); }
+    else if (k === 'f') { e.preventDefault(); SESS_KEYS.flag(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); SESS_KEYS.prev(); }
+    else if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); SESS_KEYS.next(); }
   });
 
   // the drawer and the phone search bar close themselves once a link is followed
