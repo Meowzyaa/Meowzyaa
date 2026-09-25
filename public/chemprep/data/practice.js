@@ -149,6 +149,734 @@ CHEMPREP_PRACTICE.push(
 
 );
 
+/* --- chemistry-of-life.js --- */
+/* Practice written against the syllabus objectives. Not past paper questions. */
+CHEMPREP_PRACTICE.push(
+
+// ---- 12.5.1.13  proteins as polymers, sequence ------------------------------
+{
+  id: 'p-12.5.1.13-1', goal: '12.5.1.13', kind: 'mcq', marks: 1,
+  stem: 'How many different tripeptides can be made using one molecule each of glycine, alanine and serine?',
+  options: { A: '3', B: '6', C: '9', D: '27' },
+  answer: 'B',
+  why: 'Each tripeptide uses all three amino acids once, so the question is how many orders there are: 3 x 2 x 1 = 6. Order matters because the chain has two different ends, a free NH2 at one end and a free COOH at the other, so Gly-Ala-Ser is a different molecule from Ser-Ala-Gly. The same logic explains why a protein\'s properties depend on its sequence: twenty amino acids in a chain of hundreds give an astronomical number of possible proteins. 27 would be the answer if each amino acid could be used more than once.'
+},
+
+// ---- 12.5.1.14  structure from hydrolysis data ------------------------------
+{
+  id: 'p-12.5.1.14-1', goal: '12.5.1.14', kind: 'structured', marks: 3,
+  stem: 'Complete hydrolysis of a pentapeptide gave five different amino acids: Ala, Gly, Leu, Ser and Val. Partial hydrolysis gave three fragments:\n\nGly-Ser-Val    Ala-Gly    Val-Leu\n\n(a) Deduce the sequence of the pentapeptide. [2]\n(b) State the reagent and conditions for complete hydrolysis of a protein. [1]',
+  scheme: [
+    '(a) the fragments overlap at Gly and at Val [1]',
+    '(a) Ala-Gly-Ser-Val-Leu [1]',
+    '(b) 6 mol dm-3 hydrochloric acid, heat under reflux for about 24 hours [1]'
+  ],
+  why: 'Complete hydrolysis only tells you which amino acids are present. Partial hydrolysis breaks only some peptide bonds, so each fragment is a genuine piece of the chain in the right order. Line the fragments up where they share an amino acid: Ala-Gly joins Gly-Ser-Val at Gly, and Gly-Ser-Val joins Val-Leu at Val. Check your answer uses each amino acid exactly once and contains every fragment.'
+},
+
+// ---- 12.5.1.15  primary, secondary and tertiary structure -------------------
+{
+  id: 'p-12.5.1.15-1', goal: '12.5.1.15', kind: 'mcq', marks: 1,
+  stem: 'Which interaction holds an alpha-helix in shape?',
+  options: {
+    A: 'hydrogen bonds between the C=O and N-H groups of the polypeptide backbone',
+    B: 'disulfide bridges between cysteine side chains',
+    C: 'ionic attractions between charged side chains',
+    D: 'peptide bonds between neighbouring amino acids'
+  },
+  answer: 'A',
+  why: 'Secondary structure, both the alpha-helix and the beta-pleated sheet, comes from hydrogen bonds between the backbone itself: the C=O of one peptide link and the N-H of another four amino acids along. Side chains are not involved, which is why the same helix appears in very different proteins. B and C are interactions between side chains, which hold the tertiary structure. D, the peptide bonds, make up the primary structure: the sequence.'
+},
+
+// ---- 12.5.1.16  forces holding the tertiary structure -----------------------
+{
+  id: 'p-12.5.1.16-1', goal: '12.5.1.16', kind: 'structured', marks: 3,
+  stem: 'Name three types of interaction between amino acid side chains that hold the tertiary structure of a protein. For each, give an example of a side chain involved. [3]',
+  scheme: [
+    'disulfide bridges, -S-S-, between two cysteine side chains (-CH2SH) [1]',
+    'ionic attractions between -COO- (aspartic or glutamic acid) and -NH3+ (lysine) [1]',
+    'hydrogen bonds, for example between -OH groups of serine / van der Waals (hydrophobic) interactions between non-polar side chains such as valine or leucine [1]'
+  ],
+  why: 'The tertiary structure is the folding of the whole chain, held by attractions between side chains that may be far apart in the sequence but close in space. Disulfide bridges are covalent and the strongest; ionic attractions depend on pH, which is why pH changes can unfold a protein; hydrogen bonds and van der Waals forces are weaker but very numerous. Non-polar side chains tend to cluster in the middle, away from water.'
+},
+
+// ---- 12.5.1.17  enzyme catalysis, lock and key ------------------------------
+{
+  id: 'p-12.5.1.17-1', goal: '12.5.1.17', kind: 'mcq', marks: 1,
+  stem: 'In the lock and key model, why does an enzyme catalyse only one reaction?',
+  options: {
+    A: 'The active site has a shape complementary to one particular substrate.',
+    B: 'The enzyme is used up after one reaction.',
+    C: 'The enzyme raises the activation energy of every other reaction.',
+    D: 'The enzyme can only work at one temperature.'
+  },
+  answer: 'A',
+  why: 'The active site is a pocket formed by the folding of the chain, and its shape and the groups lining it match one substrate, as a lock matches one key. The substrate binds to form an enzyme-substrate complex, reacts by a route with a lower activation energy, and the products leave. B is wrong because a catalyst is not used up. D confuses specificity with the effect of temperature: enzymes do have an optimum temperature, but that is not why they are specific.'
+},
+
+// ---- 12.5.1.18  competitive inhibition --------------------------------------
+{
+  id: 'p-12.5.1.18-1', goal: '12.5.1.18', kind: 'structured', marks: 3,
+  stem: 'The enzyme succinate dehydrogenase acts on succinate, -OOCCH2CH2COO-. Malonate, -OOCCH2COO-, inhibits the enzyme.\n\n(a) Explain how malonate inhibits the enzyme. [2]\n(b) Explain why the inhibition becomes less when the concentration of succinate is increased. [1]',
+  scheme: [
+    '(a) malonate has a similar shape and charge to succinate, so it binds to the active site [1]',
+    '(a) it does not react, so it blocks the active site and substrate cannot bind [1]',
+    '(b) the inhibitor and substrate compete for the active site; with more substrate, substrate molecules occupy more of the sites [1]'
+  ],
+  why: 'This is competitive inhibition: the inhibitor looks enough like the substrate to fit the active site but cannot be converted, so while it sits there that enzyme molecule is out of action. Binding is reversible, so the substrate and inhibitor compete, and flooding the enzyme with substrate wins most sites back. A non-competitive inhibitor, such as a heavy metal ion, binds somewhere else and changes the shape of the active site, so adding more substrate does not help.'
+},
+
+// ---- 12.5.1.19  denaturation -----------------------------------------------
+{
+  id: 'p-12.5.1.19-1', goal: '12.5.1.19', kind: 'mcq', marks: 1,
+  stem: 'An enzyme is denatured by heating. Which change does NOT happen?',
+  options: {
+    A: 'Hydrogen bonds in the protein are broken.',
+    B: 'The tertiary structure is lost.',
+    C: 'Peptide bonds between the amino acids are broken.',
+    D: 'The shape of the active site changes.'
+  },
+  answer: 'C',
+  why: 'Denaturation unfolds the protein: heat, extremes of pH or heavy metal ions break the weaker interactions holding the secondary and tertiary structure, so the active site loses its shape and the enzyme stops working. The peptide bonds of the primary structure are strong covalent bonds and stay intact; breaking them is hydrolysis, which needs acid and hours of refluxing, or a protease enzyme.'
+},
+
+// ---- 12.5.1.20  structure of DNA -------------------------------------------
+{
+  id: 'p-12.5.1.20-1', goal: '12.5.1.20', kind: 'mcq', marks: 1,
+  stem: 'How many hydrogen bonds join a cytosine base to a guanine base in DNA?',
+  options: { A: '1', B: '2', C: '3', D: '4' },
+  answer: 'C',
+  why: 'C-G pairs are held by three hydrogen bonds and A-T pairs by two. The bases pair only one way because only those combinations line up the hydrogen bond donors (N-H) with the acceptors (C=O and ring N) at the right distances. That complementary pairing is what lets each strand act as a template when DNA is copied.'
+},
+
+// ---- 12.5.1.21  DNA encoding -----------------------------------------------
+{
+  id: 'p-12.5.1.21-1', goal: '12.5.1.21', kind: 'mcq', marks: 1,
+  stem: 'A section of mRNA that codes for part of a protein is 36 bases long. How many amino acids does it code for?',
+  options: { A: '6', B: '12', C: '36', D: '108' },
+  answer: 'B',
+  why: 'The genetic code is a triplet code: each codon of three bases codes for one amino acid, so 36 / 3 = 12. Four bases taken three at a time give 4 x 4 x 4 = 64 codons, more than enough for the 20 amino acids, so most amino acids have several codons and three codons mean stop.'
+},
+
+// ---- 12.5.1.22  chemistry of DNA mutation ----------------------------------
+{
+  id: 'p-12.5.1.22-1', goal: '12.5.1.22', kind: 'mcq', marks: 1,
+  stem: 'Why does the deletion of one base from a gene usually have a much bigger effect on the protein than the substitution of one base?',
+  options: {
+    A: 'A deletion shifts the reading frame, so every codon after it is changed.',
+    B: 'A deletion always creates a stop codon at that point.',
+    C: 'A substitution never changes the amino acid.',
+    D: 'A deletion breaks the hydrogen bonds between the two strands.'
+  },
+  answer: 'A',
+  why: 'The code is read three bases at a time from a fixed start, with no gaps. Delete one base and every triplet from that point on is read out of step, so the amino acid sequence after it is changed completely, usually giving a useless protein. A substitution changes only one codon, so at most one amino acid, and sometimes none, because several codons code for the same amino acid. C is too strong: sickle-cell anaemia is caused by a single substitution.'
+},
+
+// ---- 12.5.1.23  genetic basis of disease ------------------------------------
+{
+  id: 'p-12.5.1.23-1', goal: '12.5.1.23', kind: 'structured', marks: 3,
+  stem: 'In sickle-cell anaemia, a change of one base in the gene for haemoglobin replaces glutamic acid (side chain -CH2CH2COOH) with valine (side chain -CH(CH3)2).\n\n(a) Name this type of mutation. [1]\n(b) Explain how this change affects the haemoglobin molecules. [2]',
+  scheme: [
+    '(a) substitution (point mutation) [1]',
+    '(b) a polar, ionised (hydrophilic) side chain is replaced by a non-polar (hydrophobic) one [1]',
+    '(b) the haemoglobin molecules stick together (the shape and solubility change), distorting the red blood cells into a sickle shape [1]'
+  ],
+  why: 'One altered base changes one codon and so one amino acid out of about 150 in the chain. That is enough because of where it is and what it is: glutamic acid on the surface carries a charged -COO- group that interacts well with water, while valine is non-polar. The non-polar patch on one molecule fits a pocket on another, so deoxygenated haemoglobin clumps into long fibres that bend the cell. It is the textbook example of a change in primary structure changing function.'
+},
+
+// ---- 12.5.1.24  modifying primary structure --------------------------------
+{
+  id: 'p-12.5.1.24-1', goal: '12.5.1.24', kind: 'mcq', marks: 1,
+  stem: 'A mutation changes one amino acid far away from the active site of an enzyme, yet the enzyme stops working. What is the best explanation?',
+  options: {
+    A: 'The new side chain changes how the chain folds, which changes the shape of the active site.',
+    B: 'The new amino acid breaks the peptide bonds next to it.',
+    C: 'The enzyme now has a different molecular formula, so it cannot catalyse the reaction.',
+    D: 'Only amino acids in the active site affect an enzyme.'
+  },
+  answer: 'A',
+  why: 'The tertiary structure depends on interactions between side chains all along the chain: hydrogen bonds, ionic attractions, disulfide bridges and hydrophobic interactions. Change one side chain and some of those interactions are lost or new ones form, so the chain can fold differently, and the active site, which is made by that folding, changes shape. This is also how enzymes can be engineered on purpose to work better or to catalyse something new.'
+},
+
+// ---- 12.5.1.25  ATP --------------------------------------------------------
+{
+  id: 'p-12.5.1.25-1', goal: '12.5.1.25', kind: 'structured', marks: 3,
+  stem: '(a) Name the three components of a molecule of ATP. [1]\n(b) Write an equation for the hydrolysis of ATP. [1]\n(c) Explain why this hydrolysis is important in living cells. [1]',
+  scheme: [
+    '(a) adenine, ribose and three phosphate groups (all three needed) [1]',
+    '(b) ATP + H2O -> ADP + Pi (inorganic phosphate) [1]',
+    '(c) it releases energy (about 30 kJ mol-1) that the cell uses for muscle contraction, active transport and making molecules [1]'
+  ],
+  why: 'Draw ATP as a block diagram: adenine joined to ribose, joined to a chain of three phosphates. Hydrolysis removes the end phosphate, giving adenosine diphosphate. The energy is released because the products, with the phosphate hydrated in water, are more stable than ATP; the bond is not a store of energy that is released on breaking, since breaking any bond takes energy in. Respiration of glucose supplies the energy to turn ADP and phosphate back into ATP.'
+},
+
+// ---- 12.5.1.26  metals essential to life -----------------------------------
+{
+  id: 'p-12.5.1.26-1', goal: '12.5.1.26', kind: 'mcq', marks: 1,
+  stem: 'Which metal is correctly matched with its role in the body?',
+  options: {
+    A: 'iron: carrying oxygen in haemoglobin',
+    B: 'zinc: the central ion of chlorophyll',
+    C: 'calcium: carrying oxygen in the blood',
+    D: 'cobalt: carrying nerve impulses'
+  },
+  answer: 'A',
+  why: 'Fe2+ at the centre of each haem group binds an O2 molecule as a ligand. Magnesium, not zinc, sits at the centre of chlorophyll; zinc is found at the active site of many enzymes. Calcium builds bones and teeth and is needed for muscle contraction and blood clotting. Sodium and potassium ions carry nerve impulses, and cobalt is part of vitamin B12.'
+},
+
+// ---- 12.5.1.27  heavy metal pollution --------------------------------------
+{
+  id: 'p-12.5.1.27-1', goal: '12.5.1.27', kind: 'structured', marks: 3,
+  stem: 'Mercury compounds released into a river are found at much higher concentrations in fish-eating birds than in the river water.\n\n(a) Give one source of mercury pollution. [1]\n(b) Explain why the concentration in the birds is so much higher than in the water. [2]',
+  scheme: [
+    '(a) gold mining / burning coal / chemical plants that used mercury (chlor-alkali cells, acetaldehyde plants) / discarded batteries or thermometers [1]',
+    '(b) mercury is not excreted, so it builds up in the tissues of each organism (bioaccumulation) [1]',
+    '(b) each animal eats many organisms from the level below, so the concentration increases at each step up the food chain [1]'
+  ],
+  why: 'Plankton take up dissolved mercury, small fish eat a lot of plankton, larger fish eat many small fish, and birds eat many large fish. Because the metal stays in the body instead of being excreted, the concentration multiplies at every level. In water bacteria convert mercury into methylmercury, which is especially easily absorbed; this caused Minamata disease in Japan. In Kazakhstan the Nura river was polluted by mercury from the acetaldehyde plant at Temirtau.'
+},
+
+// ---- 12.5.1.28  toxic metals and proteins ----------------------------------
+{
+  id: 'p-12.5.1.28-1', goal: '12.5.1.28', kind: 'mcq', marks: 1,
+  stem: 'Why are Pb2+ and Hg2+ ions toxic to enzymes?',
+  options: {
+    A: 'They bond to the -SH groups of cysteine, changing the tertiary structure of the enzyme.',
+    B: 'They break the peptide bonds of the enzyme.',
+    C: 'They oxidise the substrate before it reaches the enzyme.',
+    D: 'They are radioactive and damage the enzyme.'
+  },
+  answer: 'A',
+  why: 'Heavy metal ions bond very strongly to sulfur, so they attach to the thiol (-SH) groups of cysteine side chains, breaking disulfide bridges and other interactions that hold the folded shape. The active site changes shape, so the enzyme is inactivated: this is non-competitive inhibition. They can also displace essential ions such as Zn2+ from active sites. Treatment uses a chelating agent such as EDTA, which binds the metal ion so it can be excreted.'
+}
+
+);
+
+/* --- industrial-organic.js --- */
+/* Practice written against the syllabus objectives. Not past paper questions. */
+CHEMPREP_PRACTICE.push(
+
+// ---- 11.4.2.10  fractionation of crude oil ----------------------------------
+{
+  id: 'p-11.4.2.10-1', goal: '11.4.2.10', kind: 'mcq', marks: 1,
+  stem: 'Which fraction from the distillation of crude oil has the highest boiling range and is used to surface roads?',
+  options: { A: 'kerosene', B: 'naphtha', C: 'bitumen', D: 'refinery gas' },
+  answer: 'C',
+  why: 'Bitumen is the residue at the bottom of the column: the longest chains (about 40 carbons and more), the strongest London forces, so the highest boiling points; it is thick and sticky, which suits roads and roofing. Refinery gases (C1 to C4) come off the top and are sold as bottled gas. Naphtha is the chemical feedstock that is cracked to make alkenes, and kerosene is jet fuel.'
+},
+{
+  id: 'p-11.4.2.10-2', goal: '11.4.2.10', kind: 'structured', marks: 2,
+  stem: 'Explain how crude oil is separated into fractions in a fractionating column. [2]',
+  scheme: [
+    'crude oil is heated until it vaporises and the vapour rises up a column that is hotter at the bottom and cooler at the top [1]',
+    'each fraction condenses where the temperature falls below its boiling point, so fractions with different boiling ranges are collected at different heights [1]'
+  ],
+  why: 'Boiling point rises with chain length because longer molecules have more electrons and more contact, so stronger London forces. So as the vapour rises and cools, the longest molecules condense first, low down, and the shortest stay as gas right to the top. A fraction is still a mixture, of alkanes with similar numbers of carbon atoms, not a pure compound.'
+},
+
+// ---- 11.4.2.12  thermal and catalytic cracking ------------------------------
+{
+  id: 'p-11.4.2.12-1', goal: '11.4.2.12', kind: 'structured', marks: 4,
+  stem: 'Decane, C10H22, can be cracked.\n\n(a) Write an equation for the cracking of decane into octane and one other product. [1]\n(b) State the conditions used in catalytic cracking. [1]\n(c) In thermal cracking, C-C bonds break by homolytic fission. State what this produces. [1]\n(d) Explain why at least one product of cracking an alkane must be an alkene. [1]',
+  scheme: [
+    '(a) C10H22 -> C8H18 + C2H4 [1]',
+    '(b) zeolite catalyst, about 450 °C, slight pressure [1]',
+    '(c) free radicals (each fragment keeps one electron of the bond) [1]',
+    '(d) there are not enough hydrogen atoms for all the products to be alkanes (CnH2n+2) [1]'
+  ],
+  why: 'Balance the equation by carbon and hydrogen: 10 - 8 leaves 2 carbons and 22 - 18 leaves 4 hydrogens, so the other product is C2H4, ethene. Part (d) is why: an alkane CnH2n+2 has just enough hydrogen to be one saturated molecule; split it in two and there are two fewer hydrogens than two alkanes would need, so a C=C must form. Thermal cracking, at high temperature and pressure, goes through free radicals and gives a lot of alkenes; catalytic cracking, on a zeolite, gives the branched alkanes and aromatics that make better petrol.'
+},
+
+// ---- 11.4.2.28  two routes to ethanol ---------------------------------------
+{
+  id: 'p-11.4.2.28-1', goal: '11.4.2.28', kind: 'structured', marks: 4,
+  stem: 'Ethanol is made industrially by the hydration of ethene or by the fermentation of sugars.\n\n(a) Give two advantages of making ethanol by hydration of ethene. [2]\n(b) Give two advantages of making ethanol by fermentation. [2]',
+  scheme: [
+    '(a) any two: fast / continuous process; produces pure ethanol; 100% atom economy; high yield (with recycling of unreacted ethene) [2]',
+    '(b) any two: renewable raw material (sugar from plants); low temperature and atmospheric pressure, so less energy; simple, cheap equipment [2]'
+  ],
+  why: 'Hydration: C2H4 + H2O -> C2H5OH with a phosphoric acid catalyst at about 300 °C and 60 atm. Its weakness is the raw material: ethene comes from crude oil, which is finite, and the conditions need a lot of energy. Fermentation: C6H12O6 -> 2C2H5OH + 2CO2 with yeast at about 35 °C and no air. Its weaknesses are speed and purity: it is a slow batch process, it stops at about 15% ethanol when the yeast die, and the ethanol must be separated by fractional distillation. Only one mark per point: do not give "fast" and "continuous" as two separate reasons.'
+},
+
+// ---- 11.4.2.29  carbon neutrality -------------------------------------------
+{
+  id: 'p-11.4.2.29-1', goal: '11.4.2.29', kind: 'structured', marks: 3,
+  stem: 'Bioethanol is made by fermenting glucose from sugar cane, and is burnt as a fuel.\n\n(a) Use equations for photosynthesis, fermentation and combustion to explain why bioethanol is described as carbon neutral. [2]\n(b) Explain why it is not completely carbon neutral in practice. [1]',
+  scheme: [
+    '(a) photosynthesis: 6CO2 + 6H2O -> C6H12O6 + 6O2; fermentation: C6H12O6 -> 2C2H5OH + 2CO2; combustion: 2C2H5OH + 6O2 -> 4CO2 + 6H2O [1]',
+    '(a) the 6 CO2 absorbed by the plant equals the 2 + 4 = 6 CO2 released [1]',
+    '(b) fossil fuels are burnt for farming machinery, fertiliser manufacture, transport and distillation, releasing extra CO2 [1]'
+  ],
+  why: 'Carbon neutral means no net change in atmospheric CO2 over the whole cycle. Scale the equations to one glucose: photosynthesis takes in six CO2, fermentation gives two back and burning the two ethanol molecules gives four, so the carbon simply goes round. The argument breaks down because of everything around the chemistry: most of the energy for growing, processing and moving the crop still comes from fossil fuels.'
+},
+
+// ---- 11.4.2.30  biofuels and the environment --------------------------------
+{
+  id: 'p-11.4.2.30-1', goal: '11.4.2.30', kind: 'mcq', marks: 1,
+  stem: 'Which is a genuine environmental disadvantage of biofuels?',
+  options: {
+    A: 'Land used to grow fuel crops cannot be used to grow food, and forests may be cleared for it.',
+    B: 'They are made from a finite resource.',
+    C: 'Burning them releases more CO2 than the crops absorbed while growing.',
+    D: 'They cannot be burnt in car engines.'
+  },
+  answer: 'A',
+  why: 'Biofuels are renewable (so B is wrong), and burning them releases the carbon the plants took in (so C is wrong in principle, even if the process is not perfectly neutral). Bioethanol is blended into petrol and biodiesel into diesel, so D is wrong. The real trade-offs are land, water and fertiliser: growing fuel crops competes with food production, can raise food prices and can drive deforestation, which releases the carbon stored in the trees.'
+},
+
+// ---- 12.4.2.13  uses of esters, soaps and biodiesel -------------------------
+{
+  id: 'p-12.4.2.13-1', goal: '12.4.2.13', kind: 'structured', marks: 4,
+  stem: '(a) A fat, glyceryl tristearate, is boiled with aqueous sodium hydroxide. Name the two products. [2]\n(b) Biodiesel is made by heating a vegetable oil with an alcohol and a catalyst. Name the alcohol and the catalyst usually used. [2]',
+  scheme: [
+    '(a) propane-1,2,3-triol (glycerol) [1]',
+    '(a) sodium stearate (the sodium salt of the fatty acid), which is soap [1]',
+    '(b) methanol [1]',
+    '(b) potassium hydroxide or sodium hydroxide [1]'
+  ],
+  why: 'Fats and oils are triesters of glycerol with long-chain fatty acids. Alkaline hydrolysis (saponification) goes to completion because the acid ends up as its carboxylate salt, and the sodium salt of a long-chain acid is a soap: an ionic head that dissolves in water and a long hydrocarbon tail that dissolves in grease. Biodiesel swaps the glycerol for methanol (transesterification), giving methyl esters of the fatty acids, which are runny enough to use as fuel, with glycerol as the by-product.'
+},
+
+// ---- 12.4.2.14  acid chlorides and acid anhydrides -------------------------
+{
+  id: 'p-12.4.2.14-1', goal: '12.4.2.14', kind: 'mcq', marks: 1,
+  stem: 'Which compound is an acid anhydride?',
+  options: {
+    A: '(CH3CO)2O',
+    B: 'CH3COCl',
+    C: 'CH3COOCH3',
+    D: 'CH3CONH2'
+  },
+  answer: 'A',
+  why: 'An acid anhydride is two acyl groups joined through one oxygen atom, CH3CO-O-COCH3, formally two acid molecules minus one water. B is an acyl (acid) chloride, C an ester (methyl ethanoate) and D an amide (ethanamide). Anhydrides and acyl chlorides are the two reactive acid derivatives: both acylate water, alcohols, ammonia and amines, but the anhydride reacts more slowly and releases a carboxylic acid instead of HCl.'
+},
+{
+  id: 'p-12.4.2.14-2', goal: '12.4.2.14', kind: 'structured', marks: 2,
+  stem: 'Write an equation for the reaction of ethanoic anhydride with methanol, and name both organic products. [2]',
+  scheme: [
+    '(CH3CO)2O + CH3OH -> CH3COOCH3 + CH3COOH [1]',
+    'methyl ethanoate and ethanoic acid [1]'
+  ],
+  why: 'One acyl group goes to the methanol to make the ester and the other leaves with the bridging oxygen as ethanoic acid. With ethanoyl chloride the by-product would be HCl instead. Compared with making the same ester from ethanoic acid and methanol with an acid catalyst, this reaction is not reversible, so it goes to completion.'
+},
+
+// ---- 12.4.2.17  acylation in the manufacture of aspirin ---------------------
+{
+  id: 'p-12.4.2.17-1', goal: '12.4.2.17', kind: 'structured', marks: 4,
+  stem: 'Aspirin is made by reacting 2-hydroxybenzoic acid with ethanoic anhydride.\n\n(a) Which functional group of 2-hydroxybenzoic acid is acylated? [1]\n(b) Give two reasons why industry uses ethanoic anhydride rather than ethanoyl chloride. [2]\n(c) Describe a test showing that a sample of aspirin contains no unreacted 2-hydroxybenzoic acid. [1]',
+  scheme: [
+    '(a) the phenol (-OH on the ring) group [1]',
+    '(b) any two: cheaper; less corrosive; reacts less violently / is easier to control; not hydrolysed so readily by moisture; by-product is ethanoic acid, not toxic HCl fumes [2]',
+    '(c) add neutral iron(III) chloride solution: no violet (purple) colour means no phenol group is present [1]'
+  ],
+  why: 'HOC6H4COOH + (CH3CO)2O -> CH3COOC6H4COOH + CH3COOH. The phenol OH becomes an ester group, while the carboxylic acid group is left alone. The reasons in (b) are the practical ones that matter on an industrial scale: cost and safety. The iron(III) chloride test works because 2-hydroxybenzoic acid still has a phenol group and gives a violet colour; aspirin does not. A sharp melting point at about 136 °C is the other purity check.'
+},
+
+// ---- 11.1.4.38  infrared and global warming ---------------------------------
+{
+  id: 'p-11.1.4.38-1', goal: '11.1.4.38', kind: 'mcq', marks: 1,
+  stem: 'Why do carbon dioxide molecules absorb infrared radiation while nitrogen molecules do not?',
+  options: {
+    A: 'Some vibrations of CO2 change the dipole of the molecule; no vibration of N2 does.',
+    B: 'CO2 is a polar molecule and N2 is not.',
+    C: 'The triple bond in N2 is too strong to vibrate.',
+    D: 'CO2 molecules are heavier than N2 molecules.'
+  },
+  answer: 'A',
+  why: 'A molecule absorbs infrared only if the vibration changes its dipole. In N2 the two atoms are identical, so stretching the bond never creates a dipole. CO2 is linear and non-polar overall (so B is wrong), but when one C=O bond stretches while the other shortens, or when the molecule bends, the charges no longer cancel and a dipole appears, so those vibrations absorb. That is why CO2, H2O and CH4 are greenhouse gases and N2 and O2, most of the atmosphere, are not.'
+},
+{
+  id: 'p-11.1.4.38-2', goal: '11.1.4.38', kind: 'structured', marks: 3,
+  stem: 'Explain how carbon dioxide in the atmosphere contributes to global warming. [3]',
+  scheme: [
+    'the Earth absorbs radiation from the Sun and re-emits it as infrared [1]',
+    'CO2 molecules absorb this infrared, which makes their bonds vibrate [1]',
+    'they re-emit the energy in all directions, some back towards the Earth, so the lower atmosphere warms [1]'
+  ],
+  why: 'Sunlight is mostly visible and UV, which passes through the atmosphere. The warmed surface emits at much longer, infrared, wavelengths, and those are the wavelengths that greenhouse gases absorb. Without any greenhouse effect the Earth would be well below freezing; the problem is the enhanced effect from the extra CO2 released by burning fossil fuels. How much a gas contributes depends on how strongly it absorbs, its concentration and how long it stays in the atmosphere.'
+},
+
+// ---- 11.1.4.42  magnetic resonance imaging ---------------------------------
+{
+  id: 'p-11.1.4.42-1', goal: '11.1.4.42', kind: 'mcq', marks: 1,
+  stem: 'Magnetic resonance imaging (MRI) uses the same principle as NMR spectroscopy. Which nuclei give the signal in a body scan?',
+  options: {
+    A: 'hydrogen nuclei, mostly in water and fat',
+    B: 'carbon-13 nuclei in proteins',
+    C: 'oxygen-16 nuclei in water',
+    D: 'the electrons in all the atoms'
+  },
+  answer: 'A',
+  why: 'The body is mostly water, and fat is rich in hydrogen too, so there are plenty of 1H nuclei. In a strong magnetic field they absorb radio waves, and different tissues give different signals because they differ in water content and chemical environment, which a computer turns into an image of soft tissue. Carbon-13 is only 1% of carbon, and oxygen-16 has no nuclear spin, so it gives no NMR signal. Radio waves are not ionising radiation, which makes MRI safer than X-rays for repeated scans.'
+}
+
+);
+
+/* --- inorganic.js --- */
+/* Practice written against the syllabus objectives. Not past paper questions. */
+CHEMPREP_PRACTICE.push(
+
+// ---- 11.2.1.1  forms of the Periodic Table ----------------------------------
+{
+  id: 'p-11.2.1.1-1', goal: '11.2.1.1', kind: 'mcq', marks: 1,
+  stem: 'Mendeleev left gaps in his Periodic Table of 1869. Why?',
+  options: {
+    A: 'He left them for elements not yet discovered, and predicted their properties.',
+    B: 'He left them for the noble gases, which he knew were unreactive.',
+    C: 'He arranged the elements by proton number, and some proton numbers were missing.',
+    D: 'He left them for isotopes of the elements already in the table.'
+  },
+  answer: 'A',
+  why: 'Mendeleev ordered the elements by atomic mass but put grouping by properties first, so where the next known element did not fit the pattern he left a space. He predicted the properties of the missing elements, and gallium and germanium (his eka-aluminium and eka-silicon) were later found to match. The noble gases were not known in 1869, and proton numbers were only established by Moseley in 1913: the modern table is ordered by them, which fixes pairs such as tellurium and iodine that are out of order by mass.'
+},
+
+// ---- 11.2.1.3  s, p, d and f blocks ----------------------------------------
+{
+  id: 'p-11.2.1.3-1', goal: '11.2.1.3', kind: 'mcq', marks: 1,
+  stem: 'An element has the electron configuration 1s2 2s2 2p6 3s2 3p6 3d5 4s2. In which block of the Periodic Table is it?',
+  options: { A: 's block', B: 'p block', C: 'd block', D: 'f block' },
+  answer: 'C',
+  why: 'The block is named after the subshell that is being filled by the element\'s highest-energy electron. Following the filling order, 4s fills before 3d, so this element (manganese) is adding its last electrons to the 3d subshell and is in the d block, even though the configuration is often written ending in 4s2. The s block is groups 1 and 2, the p block groups 13 to 18, and the f block the lanthanides and actinides.'
+},
+
+// ---- 11.2.1.13  chlorine in water treatment ---------------------------------
+{
+  id: 'p-11.2.1.13-1', goal: '11.2.1.13', kind: 'structured', marks: 3,
+  stem: '(a) Write an equation for the reaction of chlorine with water. [1]\n(b) Give one benefit and one risk of adding chlorine to drinking water. [2]',
+  scheme: [
+    '(a) Cl2 + H2O -> HCl + HClO (equilibrium arrow accepted) [1]',
+    '(b) benefit: kills bacteria, preventing diseases such as cholera and typhoid [1]',
+    '(b) risk: chlorine is toxic / it reacts with organic matter to form chlorinated hydrocarbons that may cause cancer [1]'
+  ],
+  why: 'The reaction is a disproportionation: chlorine (0) goes to -1 in HCl and +1 in HClO. Chloric(I) acid is the species that kills bacteria. The risk-benefit judgement is what the objective asks for: the chlorinated organic compounds formed, such as trichloromethane, carry a small long-term risk, while untreated water carries a large and immediate risk of disease, so chlorination is judged worth it.'
+},
+
+// ---- 11.2.1.17  BaCl2 and BaSO4 --------------------------------------------
+{
+  id: 'p-11.2.1.17-1', goal: '11.2.1.17', kind: 'mcq', marks: 1,
+  stem: 'Barium ions are toxic, yet patients swallow barium sulfate before an X-ray of the digestive system. Why is this safe?',
+  options: {
+    A: 'Barium sulfate is insoluble, so barium ions are not absorbed into the body.',
+    B: 'Barium sulfate reacts with stomach acid to form harmless barium chloride.',
+    C: 'The sulfate ions neutralise the toxic effect of barium.',
+    D: 'Barium sulfate is broken down by X-rays.'
+  },
+  answer: 'A',
+  why: 'Group 2 sulfates become less soluble down the group, and barium sulfate is so insoluble that almost no Ba2+ ions dissolve to be absorbed. Barium is a heavy atom that absorbs X-rays strongly, so the coated gut shows up clearly. B is dangerous nonsense: barium chloride is soluble and toxic. The same insolubility is why acidified BaCl2 solution is the test for sulfate ions: a white precipitate of BaSO4 forms.'
+},
+
+// ---- 11.2.3.9  commercial cells --------------------------------------------
+{
+  id: 'p-11.2.3.9-1', goal: '11.2.3.9', kind: 'mcq', marks: 1,
+  stem: 'In an alkaline cell (an ordinary AA battery), which substance is the negative electrode?',
+  options: {
+    A: 'zinc',
+    B: 'manganese(IV) oxide',
+    C: 'potassium hydroxide',
+    D: 'graphite'
+  },
+  answer: 'A',
+  why: 'The negative electrode is where oxidation happens and electrons are released into the circuit, so it is the reducing agent: zinc, which is oxidised to zinc oxide or hydroxide. Manganese(IV) oxide is the positive electrode, where reduction happens. Potassium hydroxide is the electrolyte, which is why the cell is called alkaline. The cell gives about 1.5 V and is not rechargeable, unlike lead-acid and lithium-ion cells.'
+},
+
+// ---- 12.2.1.1  occurrence and extraction of group 14 ------------------------
+{
+  id: 'p-12.2.1.1-1', goal: '12.2.1.1', kind: 'structured', marks: 4,
+  stem: '(a) Silicon is extracted by heating silica with carbon in an electric furnace. Write an equation for the reaction. [1]\n(b) Lead is extracted from galena, PbS, in two stages. Write an equation for each stage. [2]\n(c) State one environmental problem caused by extracting lead. [1]',
+  scheme: [
+    '(a) SiO2 + 2C -> Si + 2CO [1]',
+    '(b) roasting: 2PbS + 3O2 -> 2PbO + 2SO2 [1]',
+    '(b) reduction: PbO + C -> Pb + CO (or 2PbO + C -> 2Pb + CO2) [1]',
+    '(c) SO2 released causes acid rain / lead dust and fumes are toxic [1]'
+  ],
+  why: 'Most metals down group 14 occur as oxides or sulfides and are reduced by carbon. A sulfide is roasted in air first, because carbon reduces oxides, not sulfides; that step is what releases SO2, which has to be captured, often to make sulfuric acid. Tin is extracted in the same way from cassiterite, SnO2. Silicon needs an electric furnace at about 2000 °C because SiO2 is a very stable giant covalent structure.'
+},
+
+// ---- 12.2.1.13  occurrence of sulfur ---------------------------------------
+{
+  id: 'p-12.2.1.13-1', goal: '12.2.1.13', kind: 'mcq', marks: 1,
+  stem: 'Where does most of the sulfur produced today come from?',
+  options: {
+    A: 'removing hydrogen sulfide and sulfur compounds from natural gas and crude oil',
+    B: 'mining native sulfur from volcanic deposits',
+    C: 'heating gypsum, CaSO4.2H2O',
+    D: 'electrolysis of molten metal sulfides'
+  },
+  answer: 'A',
+  why: 'Natural gas and crude oil contain H2S and organic sulfur compounds that must be removed anyway, because burning them would release SO2. The H2S is partly burnt to SO2, and the two react to give sulfur: 2H2S + SO2 -> 3S + 2H2O. So sulfur is now mostly a by-product of cleaning fuels. It also occurs as the element near volcanoes, in sulfide ores such as galena (PbS) and pyrite (FeS2), and in sulfates such as gypsum.'
+},
+
+// ---- 12.2.1.14  structure and allotropy of sulfur ---------------------------
+{
+  id: 'p-12.2.1.14-1', goal: '12.2.1.14', kind: 'mcq', marks: 1,
+  stem: 'Which statement about rhombic and monoclinic sulfur is correct?',
+  options: {
+    A: 'Both are made of S8 rings, packed in different ways.',
+    B: 'Rhombic sulfur is made of S8 rings and monoclinic sulfur of S2 molecules.',
+    C: 'Monoclinic sulfur is the stable form at room temperature.',
+    D: 'They have different chemical properties because they are different elements.'
+  },
+  answer: 'A',
+  why: 'Allotropes are different structural forms of the same element in the same physical state. Both crystalline forms of sulfur consist of crown-shaped S8 rings; they differ only in how the rings pack in the crystal. Rhombic is the stable form below about 96 °C and monoclinic above it. Pouring molten sulfur into cold water gives plastic sulfur, made of long chains, which slowly reverts to rhombic. The chemical properties are the same, because it is all sulfur.'
+},
+
+// ---- 12.3.4.17  acid-base theories -----------------------------------------
+{
+  id: 'p-12.3.4.17-1', goal: '12.3.4.17', kind: 'mcq', marks: 1,
+  stem: 'Boron trifluoride reacts with ammonia: BF3 + NH3 -> F3B-NH3. Which theory describes BF3 as an acid in this reaction?',
+  options: {
+    A: 'the Lewis theory only',
+    B: 'the Arrhenius theory only',
+    C: 'the Bronsted-Lowry theory only',
+    D: 'all three theories'
+  },
+  answer: 'A',
+  why: 'No proton is transferred and there is no water, so neither the Arrhenius theory (acids give H+ ions in water) nor the Bronsted-Lowry theory (acids donate protons) applies. In Lewis terms, the lone pair on the nitrogen of NH3 forms a dative bond to the boron, which has only six outer electrons and an empty orbital: BF3 accepts an electron pair, so it is a Lewis acid, and NH3 is a Lewis base.'
+},
+{
+  id: 'p-12.3.4.17-2', goal: '12.3.4.17', kind: 'structured', marks: 3,
+  stem: 'Ammonia gas reacts with hydrogen chloride gas: NH3(g) + HCl(g) -> NH4Cl(s).\n\n(a) Explain why this is an acid-base reaction according to the Bronsted-Lowry theory but not according to the Arrhenius theory. [2]\n(b) Identify the Lewis base in the reaction, giving a reason. [1]',
+  scheme: [
+    '(a) Bronsted-Lowry: HCl donates a proton to NH3, which accepts it [1]',
+    '(a) Arrhenius needs H+ and OH- ions in aqueous solution; this reaction happens in the gas phase with no water and no OH- [1]',
+    '(b) NH3, because it donates its lone pair to the H+ (forming a dative bond) [1]'
+  ],
+  why: 'Each theory widens the one before. Arrhenius works only in water. Bronsted-Lowry keeps the proton but drops the water, so it covers this gas-phase reaction. Lewis drops the proton too and looks only at the electron pair, so it also covers BF3 with NH3 and metal ions with ligands. In the NH4+ ion formed here, one N-H bond is a dative bond made from the nitrogen lone pair, but once formed it is identical to the other three.'
+}
+
+);
+
+/* --- materials-design.js --- */
+/* Practice written against the syllabus objectives. Not past paper questions. */
+CHEMPREP_PRACTICE.push(
+
+// ---- 12.4.1.1  chemistry solving environmental problems ---------------------
+{
+  id: 'p-12.4.1.1-1', goal: '12.4.1.1', kind: 'structured', marks: 4,
+  stem: 'Car exhaust gases contain carbon monoxide, nitrogen monoxide and unburnt hydrocarbons. A catalytic converter removes them.\n\n(a) Write an equation for the reaction between CO and NO in the converter. [1]\n(b) Name one metal used as the catalyst. [1]\n(c) Explain why the catalyst is spread as a thin layer over a ceramic honeycomb. [1]\n(d) Explain why a car with a catalytic converter must not use leaded petrol. [1]',
+  scheme: [
+    '(a) 2CO + 2NO -> 2CO2 + N2 [1]',
+    '(b) platinum / palladium / rhodium [1]',
+    '(c) gives a very large surface area for the gases to adsorb on, using little of the expensive metal [1]',
+    '(d) lead adsorbs onto the active sites and poisons the catalyst [1]'
+  ],
+  why: 'Both pollutants are removed in one step: NO is reduced to harmless N2 and CO is oxidised to CO2, so one is the oxidising agent for the other. The catalyst is heterogeneous, so the reaction happens on its surface: the gases adsorb onto active sites, react, and the products desorb. That is why surface area matters so much and why anything that sticks permanently to the sites, like lead, ruins it. Note the converter turns CO into CO2, so it does nothing about greenhouse gas emissions.'
+},
+{
+  id: 'p-12.4.1.1-2', goal: '12.4.1.1', kind: 'mcq', marks: 1,
+  stem: 'Coal-fired power stations remove sulfur dioxide from their flue gases before release. Which reaction is used?',
+  options: {
+    A: 'CaO + SO2 -> CaSO3',
+    B: 'SO2 + H2O -> H2SO3',
+    C: '2SO2 + O2 -> 2SO3',
+    D: 'S + O2 -> SO2'
+  },
+  answer: 'A',
+  why: 'Flue gas desulfurisation passes the gases through a slurry of calcium oxide or calcium carbonate. SO2 is an acidic oxide, so it reacts with the basic CaO (or with CaCO3, releasing CO2) to form calcium sulfite, which can be oxidised on to calcium sulfate and sold as gypsum for plasterboard. B is what happens in the atmosphere to make acid rain, which is the problem, not the fix. C and D are steps of the Contact process.'
+},
+
+// ---- 12.4.1.2  using natural resources efficiently --------------------------
+{
+  id: 'p-12.4.1.2-1', goal: '12.4.1.2', kind: 'mcq', marks: 1,
+  stem: 'Recycling aluminium uses only about 5% of the energy needed to extract the same mass from bauxite. What is the main reason?',
+  options: {
+    A: 'Extraction needs electrolysis of molten aluminium oxide, which uses a very large amount of electricity.',
+    B: 'Recycled aluminium is purer than extracted aluminium.',
+    C: 'Bauxite contains very little aluminium oxide.',
+    D: 'Aluminium is too reactive to be reduced by carbon, so it must be heated to a higher temperature.'
+  },
+  answer: 'A',
+  why: 'Aluminium is more reactive than carbon, so it cannot be extracted by heating the oxide with carbon. It is made by electrolysis of alumina dissolved in molten cryolite at around 950 °C, and both keeping the bath molten and driving the electrolysis cost enormous amounts of electrical energy. Melting scrap aluminium only needs enough heat to melt it (660 °C) with no chemical change. D names a true fact about reactivity but draws the wrong conclusion: the answer is electrolysis, not a hotter furnace.'
+},
+{
+  id: 'p-12.4.1.2-2', goal: '12.4.1.2', kind: 'structured', marks: 4,
+  stem: 'Green chemistry aims to use resources more efficiently.\n\n(a) State what is meant by the atom economy of a reaction. [1]\n(b) Explain how using a catalyst helps a process use resources more efficiently. [1]\n(c) Poly(lactic acid) can be made from lactic acid obtained from maize. Give one advantage of this over making a polymer from crude oil. [1]\n(d) Suggest one reason why the plant-based route may not be better overall. [1]',
+  scheme: [
+    '(a) the mass (or Mr) of the desired product as a percentage of the total mass (or Mr) of all the reactants [1]',
+    '(b) lowers the activation energy so the process runs at a lower temperature / pressure, using less energy (fuel) [1]',
+    '(c) renewable feedstock / the polymer is biodegradable / conserves crude oil [1]',
+    '(d) land used for crops cannot grow food / energy and fertilisers used in farming / water use / deforestation [1]'
+  ],
+  why: 'Atom economy measures waste built into the equation itself: an addition reaction puts every reactant atom into the product (100 %), while substitution and elimination always make a by-product. It is different from percentage yield, which measures how much you actually got. Catalysts save resources indirectly, through energy: most industrial energy still comes from burning fossil fuels. For (d), examiners reward a balanced view, and the land-use argument is the most common one.'
+},
+
+// ---- 12.4.2.39  compounds with physiological action -------------------------
+{
+  id: 'p-12.4.2.39-1', goal: '12.4.2.39', kind: 'mcq', marks: 1,
+  stem: 'Which substance does NOT have a physiological action?',
+  options: {
+    A: 'aspirin',
+    B: 'adrenaline',
+    C: 'penicillin',
+    D: 'poly(ethene)'
+  },
+  answer: 'D',
+  why: 'A compound has a physiological action when it changes how the body works, usually by binding to a receptor or an enzyme. Aspirin is a painkiller that blocks an enzyme, adrenaline is a hormone that binds to receptors, and penicillin is an antibiotic that blocks an enzyme bacteria need for their cell walls. Poly(ethene) is a long, inert, non-polar chain that the body neither absorbs nor reacts with, which is exactly why it is used for food packaging.'
+},
+
+// ---- 12.4.2.40  natural compounds that can be synthesised -------------------
+{
+  id: 'p-12.4.2.40-1', goal: '12.4.2.40', kind: 'structured', marks: 3,
+  stem: 'Willow bark contains a compound that the body converts to salicylic acid (2-hydroxybenzoic acid), which relieves pain. Aspirin is made from salicylic acid.\n\n(a) Give two reasons why a drug found in nature is usually synthesised in a laboratory rather than extracted from its natural source. [2]\n(b) Suggest why aspirin is used as a medicine rather than salicylic acid itself. [1]',
+  scheme: [
+    '(a) any two: larger quantities / a reliable supply; consistent purity and dose; cheaper; protects the plant or animal source; the structure can be modified to improve it [2]',
+    '(b) salicylic acid irritates / damages the stomach lining; aspirin causes less irritation [1]'
+  ],
+  why: 'A natural source varies from plant to plant and season to season, so the amount of active compound is unpredictable, and harvesting it on a large scale can destroy the source. Synthesis fixes both problems. The more important advantage is (a)\'s last point: once the structure is known, chemists can modify it. Aspirin is exactly that: acylating the phenol OH group of salicylic acid keeps the pain relief but makes it much less harsh on the stomach.'
+},
+
+// ---- 12.4.2.41  molecular shape and chirality -------------------------------
+{
+  id: 'p-12.4.2.41-1', goal: '12.4.2.41', kind: 'mcq', marks: 1,
+  stem: 'The two enantiomers of a drug often have different effects in the body. What is the reason?',
+  options: {
+    A: 'The enantiomers have different boiling points.',
+    B: 'Receptors and enzymes are chiral, so usually only one enantiomer fits the binding site.',
+    C: 'One of the two enantiomers is always toxic.',
+    D: 'The enantiomers have different molecular formulae.'
+  },
+  answer: 'B',
+  why: 'Enantiomers have identical physical properties (so A is wrong) and identical formulae (D is wrong); they differ only in the three-dimensional arrangement around the chiral centre. Receptors and enzymes are built from chiral L-amino acids, so the binding site is chiral too, and like a left hand in a right-handed glove, the wrong enantiomer does not fit properly. C overstates it: often the other enantiomer is simply inactive. Thalidomide is the famous case where it was harmful.'
+},
+{
+  id: 'p-12.4.2.41-2', goal: '12.4.2.41', kind: 'structured', marks: 3,
+  stem: 'A chiral drug is made in the laboratory from reactants that are not chiral.\n\n(a) Explain why the product is a racemic mixture. [2]\n(b) Give one advantage of selling the drug as a single enantiomer. [1]',
+  scheme: [
+    '(a) the reaction goes through a planar intermediate (for example a carbocation or a carbonyl group) [1]',
+    '(a) which is attacked equally from either side, giving equal amounts of the two enantiomers [1]',
+    '(b) smaller dose needed / fewer side effects / no risk from the harmful enantiomer [1]'
+  ],
+  why: 'Think of the nucleophilic addition of HCN to ethanal or an SN1 reaction: the carbon being attacked is trigonal planar, and nothing in a non-chiral reaction mixture favours one face over the other, so each face is attacked half the time. A 50:50 mixture of enantiomers is racemic and optically inactive. Separating enantiomers is difficult and wasteful, which is why chemists now use chiral catalysts or enzymes, or start from a naturally chiral molecule, to make only the one they want.'
+},
+
+// ---- 12.4.2.42  structure determination in drug design ----------------------
+{
+  id: 'p-12.4.2.42-1', goal: '12.4.2.42', kind: 'mcq', marks: 1,
+  stem: 'A drug company wants to design a molecule that fits the active site of an enzyme. Which technique shows the three-dimensional shape of the enzyme and its active site?',
+  options: {
+    A: 'X-ray crystallography',
+    B: 'gas chromatography',
+    C: 'acid-base titration',
+    D: 'flame emission test'
+  },
+  answer: 'A',
+  why: 'X-ray diffraction by a crystal of the protein gives the positions of its atoms, and so the exact shape of the active site. Chemists then use computer modelling to design molecules that fit it and bond to it through hydrogen bonds, ionic attractions and van der Waals forces. NMR and mass spectrometry are used alongside, mostly to confirm the structures of the new molecules that are made. Gas chromatography separates mixtures; it does not give shapes.'
+},
+
+// ---- 12.4.2.43  synthetic drugs ---------------------------------------------
+{
+  id: 'p-12.4.2.43-1', goal: '12.4.2.43', kind: 'mcq', marks: 1,
+  stem: 'Which drug is correctly matched with its use?',
+  options: {
+    A: 'aspirin: antibiotic',
+    B: 'penicillin: antibiotic',
+    C: 'cisplatin: antacid',
+    D: 'paracetamol: anticancer drug'
+  },
+  answer: 'B',
+  why: 'Penicillins kill bacteria by blocking the enzyme that builds their cell walls; semi-synthetic versions such as amoxicillin were made to beat resistant strains. Aspirin is a painkiller and anti-inflammatory that also thins the blood. Cisplatin is the anticancer drug: the square planar platinum complex binds to DNA and stops cancer cells dividing. Paracetamol treats pain and fever, and an overdose damages the liver. Antacids are bases such as Mg(OH)2, CaCO3 and NaHCO3.'
+},
+
+// ---- 12.4.2.44  drug delivery ----------------------------------------------
+{
+  id: 'p-12.4.2.44-1', goal: '12.4.2.44', kind: 'structured', marks: 4,
+  stem: '(a) Insulin is a protein. Explain why it cannot be given as a tablet. [2]\n(b) A drug is a weak carboxylic acid, RCOOH, with a low solubility in water. Suggest how it could be made more soluble, and explain why this works. [2]',
+  scheme: [
+    '(a) it would be hydrolysed in the stomach / digested by protease enzymes [1]',
+    '(a) its peptide bonds are broken, so it no longer works / it is not absorbed intact [1]',
+    '(b) convert it into its sodium salt, RCOO-Na+, by reaction with NaOH or NaHCO3 [1]',
+    '(b) the salt is ionic and the ions are hydrated by (form ion-dipole attractions with) water molecules [1]'
+  ],
+  why: 'The gut is built to break proteins down: stomach acid and protease enzymes hydrolyse peptide bonds into amino acids. So protein drugs are injected, straight into the blood. For (b), soluble aspirin is exactly this idea: the calcium or sodium salt of the acid dissolves far better than the neutral molecule. Amine drugs are made soluble the other way round, as their hydrochloride salts, RNH3+Cl-.'
+},
+
+// ---- 12.4.2.45  properties of polymers from their structure -----------------
+{
+  id: 'p-12.4.2.45-1', goal: '12.4.2.45', kind: 'mcq', marks: 1,
+  stem: 'Poly(ethenol) dissolves in water and is used for hospital laundry bags. Poly(ethene) does not dissolve. What explains the difference?',
+  options: {
+    A: 'Poly(ethenol) has OH groups that form hydrogen bonds with water molecules.',
+    B: 'Poly(ethenol) has much shorter chains than poly(ethene).',
+    C: 'Poly(ethenol) is an ionic compound.',
+    D: 'Poly(ethene) chains are cross-linked by covalent bonds.'
+  },
+  answer: 'A',
+  why: 'Poly(ethenol) has an OH group on every other carbon of the chain. Those OH groups hydrogen bond to water, and the energy released lets water molecules separate the chains. Poly(ethene) is a non-polar hydrocarbon with only London forces between chains, so water, which prefers its own hydrogen bonds, cannot get in. The laundry bag dissolves in the washing machine, so staff never handle the infected sheets.'
+},
+
+// ---- 12.4.2.46  the nanoscale ----------------------------------------------
+{
+  id: 'p-12.4.2.46-1', goal: '12.4.2.46', kind: 'mcq', marks: 1,
+  stem: 'A nanoparticle has a diameter of 20 nm. What is this diameter in metres?',
+  options: {
+    A: '2 x 10-9 m',
+    B: '2 x 10-8 m',
+    C: '2 x 10-7 m',
+    D: '2 x 10-6 m'
+  },
+  answer: 'B',
+  why: '1 nm = 1 x 10-9 m, so 20 nm = 20 x 10-9 m = 2 x 10-8 m. Nanoparticles are between 1 and 100 nm across. For scale, a typical atom is about 0.1 to 0.3 nm across, so a 20 nm particle is roughly a hundred atoms wide.'
+},
+{
+  id: 'p-12.4.2.46-2', goal: '12.4.2.46', kind: 'structured', marks: 2,
+  stem: 'Explain why nanoparticles of platinum are a more effective catalyst than the same mass of ordinary platinum powder.',
+  scheme: [
+    'nanoparticles have a much larger surface area to volume ratio / a much larger total surface area [1]',
+    'so a larger proportion of the platinum atoms are at the surface and available as active sites [1]'
+  ],
+  why: 'A heterogeneous catalyst works only at its surface; atoms buried inside the particle do nothing. Cutting the same mass into smaller pieces exposes more surface: halving the particle diameter doubles the surface area to volume ratio. At the nanoscale a large fraction of all the atoms are surface atoms, so far less of an expensive metal is needed for the same activity.'
+},
+
+// ---- 12.4.2.47  carbon nanoparticles ----------------------------------------
+{
+  id: 'p-12.4.2.47-1', goal: '12.4.2.47', kind: 'structured', marks: 4,
+  stem: 'Buckminsterfullerene, C60, and graphene are forms of carbon.\n\n(a) State how many other carbon atoms each carbon atom is bonded to in C60. [1]\n(b) C60 sublimes at about 530 °C, but diamond does not melt until above 3500 °C. Explain the difference. [2]\n(c) Explain why graphene conducts electricity. [1]',
+  scheme: [
+    '(a) three [1]',
+    '(b) C60 is simple molecular: only weak intermolecular (London) forces between C60 molecules need to be overcome [1]',
+    '(b) diamond is giant covalent: many strong covalent bonds must be broken [1]',
+    '(c) each carbon has one delocalised electron, free to move across the sheet [1]'
+  ],
+  why: 'In C60 each carbon, like each carbon in graphite, uses three electrons in sigma bonds to three neighbours, and the fourth is delocalised over the cage. The molecule is a closed sphere of 12 pentagons and 20 hexagons, so the bonding within it is strong but separate molecules are held together only by London forces, which is also why C60 dissolves in organic solvents such as methylbenzene. Graphene is a single layer of graphite, and its delocalised electrons move freely within the layer.'
+},
+{
+  id: 'p-12.4.2.47-2', goal: '12.4.2.47', kind: 'mcq', marks: 1,
+  stem: 'Carbon nanotubes are added to the frames of tennis rackets and bicycles. Which property makes them useful for this?',
+  options: {
+    A: 'They are very strong in tension but have a low density.',
+    B: 'They are soluble in water.',
+    C: 'They are electrical insulators.',
+    D: 'They are soft and easily deformed.'
+  },
+  answer: 'A',
+  why: 'A nanotube is a sheet of graphene rolled into a cylinder about 1 nm across, held together by strong covalent bonds all the way along its length. That gives enormous tensile strength for very little mass, so a small amount strengthens a composite without adding weight. They also conduct electricity along the tube through their delocalised electrons, so C is the opposite of the truth.'
+},
+
+// ---- 12.4.2.48  uses of nanoparticles ---------------------------------------
+{
+  id: 'p-12.4.2.48-1', goal: '12.4.2.48', kind: 'mcq', marks: 1,
+  stem: 'Many sunscreens contain nanoparticles of zinc oxide instead of ordinary zinc oxide powder. Why?',
+  options: {
+    A: 'The nanoparticles still block UV radiation but are too small to scatter visible light, so the cream looks transparent on the skin.',
+    B: 'The nanoparticles react with UV radiation to form a protective layer of ozone.',
+    C: 'The nanoparticles dissolve in water, so the cream washes off easily.',
+    D: 'The nanoparticles are less toxic than ordinary zinc oxide because they are smaller.'
+  },
+  answer: 'A',
+  why: 'Ordinary zinc oxide and titanium dioxide powders block UV well but also scatter visible light, leaving a white layer on the skin. Particles much smaller than the wavelength of visible light (400 to 700 nm) hardly scatter it, so the cream goes on clear while still absorbing UV. D is the opposite of the real worry: because nanoparticles are so small, there is concern that they may pass into the body, and their long-term effects are not fully known.'
+},
+{
+  id: 'p-12.4.2.48-2', goal: '12.4.2.48', kind: 'structured', marks: 2,
+  stem: 'Silver nanoparticles are added to wound dressings and to some clothing.\n\n(a) Suggest why they are used. [1]\n(b) Give one concern about the widespread use of nanoparticles. [1]',
+  scheme: [
+    '(a) they are antibacterial / kill bacteria (and their large surface area makes them very effective) [1]',
+    '(b) they may enter the body (lungs, skin, cells) with unknown long-term effects / they are released into the environment when washed, where their effects are unknown [1]'
+  ],
+  why: 'Silver ions are toxic to bacteria, and the huge surface area of nanoparticles releases them steadily, so a tiny mass gives long-lasting protection. The concern cuts the other way: particles small enough to be so effective are small enough to pass into cells, and silver washed out of socks and dressings ends up in rivers and sewage works, where it can kill useful bacteria. Any sensible, specific risk earns the mark.'
+}
+
+);
+
 /* --- organic.js --- */
 /* Practice written against the syllabus objectives. Not past paper questions. */
 CHEMPREP_PRACTICE.push(
@@ -652,6 +1380,110 @@ CHEMPREP_PRACTICE.push(
     '(b) the entropy change is positive, which makes the free energy change more negative [1]'
   ],
   why: 'This is the chelate effect. 1,2-diaminoethane is bidentate, so each molecule uses two nitrogen lone pairs and occupies two coordination sites, meaning three of them displace all six ammonia molecules. Count the particles on each side: four go in and seven come out. More particles means more ways of arranging the system, so the entropy change is positive, and since free energy change equals enthalpy change minus temperature times entropy change, a positive entropy change drives the free energy change negative. The enthalpy change is close to zero here, because you are swapping one nitrogen donor for another, so entropy is doing essentially all the work.'
+}
+
+);
+
+/* --- synthesis.js --- */
+/* Practice written against the syllabus objectives. Not past paper questions. */
+CHEMPREP_PRACTICE.push(
+
+// ---- 12.4.2.49  reactions that characterise functional groups ---------------
+{
+  id: 'p-12.4.2.49-1', goal: '12.4.2.49', kind: 'mcq', marks: 1,
+  stem: 'Which reagent would distinguish propanal from propanone?',
+  options: {
+    A: '2,4-dinitrophenylhydrazine',
+    B: 'Tollens\' reagent',
+    C: 'bromine water',
+    D: 'sodium carbonate solution'
+  },
+  answer: 'B',
+  why: 'Both compounds contain C=O, so both give an orange precipitate with 2,4-DNPH: that test shows a carbonyl group but cannot tell an aldehyde from a ketone. Tollens\' reagent is a mild oxidising agent: propanal is oxidised to propanoate and a silver mirror forms, while propanone, a ketone, cannot be oxidised and gives no change. Neither decolourises bromine water (no C=C) or fizzes with sodium carbonate (no COOH).'
+},
+{
+  id: 'p-12.4.2.49-2', goal: '12.4.2.49', kind: 'structured', marks: 4,
+  stem: 'Compound X has the molecular formula C3H6O. It gives:\n- an orange precipitate with 2,4-dinitrophenylhydrazine\n- no silver mirror when warmed with Tollens\' reagent\n- a yellow precipitate when warmed with iodine and sodium hydroxide\n\nIdentify X, and explain what each observation shows. [4]',
+  scheme: [
+    'orange precipitate: X contains a C=O group (aldehyde or ketone) [1]',
+    'no silver mirror: X is not an aldehyde, so it is a ketone [1]',
+    'yellow precipitate (CHI3): X contains the CH3CO- group [1]',
+    'X is propanone, CH3COCH3 [1]'
+  ],
+  why: 'Work through the tests in order and let each one narrow the options. C3H6O with a carbonyl group can only be propanal or propanone. Tollens\' rules out the aldehyde. The iodoform test then confirms it: the yellow precipitate of tri-iodomethane forms with CH3CO- compounds (and with CH3CH(OH)- alcohols, which are oxidised to them first). Propanone has the CH3CO- group; propanal does not, so it would have failed this test as well as passing Tollens\'.'
+},
+
+// ---- 12.4.2.51  synthetically useful reactions ------------------------------
+{
+  id: 'p-12.4.2.51-1', goal: '12.4.2.51', kind: 'mcq', marks: 1,
+  stem: 'Which reaction increases the length of the carbon chain by one carbon atom?',
+  options: {
+    A: 'bromoethane heated under reflux with KCN in ethanol',
+    B: 'ethanol heated with acidified potassium dichromate(VI)',
+    C: 'ethene reacted with steam over a phosphoric acid catalyst',
+    D: 'ethanol heated with concentrated sulfuric acid'
+  },
+  answer: 'A',
+  why: 'The cyanide ion is a nucleophile that brings its own carbon: CH3CH2Br + CN- -> CH3CH2CN + Br-. The product, propanenitrile, has three carbons from a two-carbon start, and it is useful because the nitrile can then be hydrolysed to a carboxylic acid or reduced to an amine. Adding HCN to an aldehyde or ketone also adds one carbon. The other three reactions change the functional group but keep two carbons.'
+},
+{
+  id: 'p-12.4.2.51-2', goal: '12.4.2.51', kind: 'structured', marks: 2,
+  stem: 'Chloroethane can be made by reacting ethane with chlorine in ultraviolet light, but this is a poor method of synthesis. Explain why. [2]',
+  scheme: [
+    'further substitution gives a mixture of products (CH3CHCl2, CH2ClCH2Cl and so on) / termination gives butane [1]',
+    'so the yield of chloroethane is low and it must be separated from the mixture [1]'
+  ],
+  why: 'Free radical substitution cannot be controlled: once chloroethane forms, a chlorine radical can remove another hydrogen from it just as easily, and termination steps join radicals together to make butane. The result is a mixture that must be separated by fractional distillation. A synthetically useful reaction gives one main product: here, ethanol with PCl5 or ethene with HCl would give chloroethane cleanly.'
+},
+
+// ---- 12.4.2.52  spider diagrams ---------------------------------------------
+{
+  id: 'p-12.4.2.52-1', goal: '12.4.2.52', kind: 'structured', marks: 5,
+  stem: 'Complete a spider diagram for ethene by giving the reagent and conditions needed to convert ethene into each of the following.\n\n(a) ethanol [1]\n(b) bromoethane [1]\n(c) 1,2-dibromoethane [1]\n(d) ethane [1]\n(e) poly(ethene) [1]',
+  scheme: [
+    '(a) steam, phosphoric acid catalyst, about 300 °C and 60 atm [1]',
+    '(b) hydrogen bromide, room temperature [1]',
+    '(c) bromine, room temperature [1]',
+    '(d) hydrogen, nickel catalyst, about 150 °C [1]',
+    '(e) high pressure with a trace of oxygen as initiator / Ziegler-Natta catalyst [1]'
+  ],
+  why: 'Every arm here is an addition across the C=C bond, which is why the alkene is such a useful starting point. Conditions carry the mark as much as the reagent: steam needs the catalyst, temperature and pressure; hydrogen needs the nickel. Learn a spider diagram for each key functional group (alkene, halogenoalkane, alcohol, carbonyl, carboxylic acid) and join them into one map: most synthesis questions are two arms of that map in a row.'
+},
+{
+  id: 'p-12.4.2.52-2', goal: '12.4.2.52', kind: 'structured', marks: 4,
+  stem: 'Give the reagent and conditions needed to convert ethanol into each of the following.\n\n(a) ethanal [1]\n(b) ethanoic acid [1]\n(c) ethene [1]\n(d) ethyl ethanoate [1]',
+  scheme: [
+    '(a) acidified potassium dichromate(VI); warm and distil off the ethanal as it forms [1]',
+    '(b) acidified potassium dichromate(VI) in excess; heat under reflux [1]',
+    '(c) concentrated sulfuric acid at about 170 °C / pass the vapour over heated aluminium oxide [1]',
+    '(d) ethanoic acid with a few drops of concentrated sulfuric acid; heat under reflux [1]'
+  ],
+  why: 'The difference between (a) and (b) is the most tested detail in this whole area. Ethanal boils at 21 °C, so distilling it off as it forms stops it meeting more oxidising agent. Under reflux the vapour returns to the flask and the ethanal is oxidised on to ethanoic acid. The dichromate turns from orange to green in both. For (d), an acyl chloride such as ethanoyl chloride also works, faster and without an equilibrium.'
+},
+
+// ---- 12.4.2.53  multi-step synthesis, yield and purity ----------------------
+{
+  id: 'p-12.4.2.53-1', goal: '12.4.2.53', kind: 'structured', marks: 5,
+  stem: 'Propanoic acid can be made from bromoethane in two steps.\n\n(a) Give the reagent and conditions for step 1, and name the intermediate. [2]\n(b) Give the reagent and conditions for step 2. [2]\n(c) Step 1 has a yield of 70% and step 2 a yield of 80%. Calculate the overall percentage yield. [1]',
+  scheme: [
+    '(a) KCN in ethanol, heat under reflux [1]',
+    '(a) propanenitrile, CH3CH2CN [1]',
+    '(b) dilute hydrochloric (or sulfuric) acid [1]',
+    '(b) heat under reflux [1]',
+    '(c) 0.70 x 0.80 x 100 = 56% [1]'
+  ],
+  why: 'Count the carbons first: bromoethane has two, propanoic acid has three, so one step must make a new C-C bond, and the cyanide ion is the reagent that does it. Acid hydrolysis then turns the C≡N into COOH: CH3CH2CN + 2H2O + H+ -> CH3CH2COOH + NH4+. Yields multiply, so every extra step costs product: two quite good steps give only just over half the theoretical amount. This is why short routes are preferred.'
+},
+{
+  id: 'p-12.4.2.53-2', goal: '12.4.2.53', kind: 'structured', marks: 4,
+  stem: 'Aspirin (Mr = 180) is made from 2-hydroxybenzoic acid (Mr = 138). One mole of 2-hydroxybenzoic acid gives one mole of aspirin.\n\nA student used 5.00 g of 2-hydroxybenzoic acid and obtained 4.50 g of dry, recrystallised aspirin.\n\n(a) Calculate the percentage yield. [3]\n(b) Describe how the student could check that the aspirin is pure. [1]',
+  scheme: [
+    '(a) moles of 2-hydroxybenzoic acid = 5.00 / 138 = 0.0362 mol [1]',
+    '(a) theoretical mass of aspirin = 0.0362 x 180 = 6.52 g [1]',
+    '(a) percentage yield = 4.50 / 6.52 x 100 = 69.0% [1]',
+    '(b) measure the melting point: pure aspirin melts sharply at the data book value (about 136 °C); an impure sample melts lower and over a range [1]'
+  ],
+  why: 'Always go through moles: the theoretical yield is what the limiting reagent could make if every molecule reacted. Keep an extra figure in the middle of the calculation and round only at the end. Losses come from an incomplete reaction and from transfers, filtering and recrystallisation, which always leaves some product dissolved in the solvent. For purity, a sharp melting point at the right temperature is the classic test; a thin-layer chromatogram with a single spot also works.'
 }
 
 );

@@ -2,8 +2,9 @@
 
 Topic-sorted practice for the NIS grade 12 chemistry ESA, built from the real past papers.
 
-356 questions pulled out of twelve papers spanning 2014 to 2025, filed under the 25 units of
-the Kazakh NIS chemistry syllabus. Pick a topic, see what has actually been asked about it,
+356 questions pulled out of twelve papers spanning 2014 to 2025, filed under the 27 units of
+the Kazakh NIS chemistry syllabus. Two units, chemistry and materials design and organic
+synthesis, have no archive questions filed under them yet and carry written practice only. Pick a topic, see what has actually been asked about it,
 and answer it. No build step, no dependencies, no backend.
 
 ## What it does
@@ -18,9 +19,10 @@ and answer it. No build step, no dependencies, no backend.
   answers graded A, C and E, taken from the OOK example-answer booklets.
 - **Self marking everywhere else.** A work pad, a link straight to the right page of the PDF,
   and a marks scale so you score yourself out of the real mark total.
-- **A syllabus mode.** All 304 learning objectives from the grade 11 and 12 course calendars,
-  ranked by how hard the past papers lean on each one, each linking to the archive questions
-  that test it and to written practice with worked solutions.
+- **A syllabus mode.** All 305 learning objectives from the grade 11 and 12 course calendars
+  (plus 12.4.2.18, which the subject programme lists and the calendar leaves out), ranked by how
+  hard the past papers lean on each one, each linking to the archive questions that test it and
+  to written practice with worked solutions: 128 questions across 83 objectives so far.
 - **A practice builder.** Choose topics, which questions (not tried, due, got wrong, flagged, all),
   how many, and a mode, in the style of UWorld's "create test". One-click Quick 20, Review due and
   Weak spots sit above it.
@@ -71,7 +73,7 @@ assets/app.js       router, question cards, drills, progress
 data/topics.js      the syllabus taxonomy, taken from the yearly course calendars
 data/reference.js   the reference: formulae, definitions, ion tests (hand-edited)
 data/questions.js   the extracted past paper bank      (generated)
-data/objectives.js  the 304 learning objectives, ranked (generated)
+data/objectives.js  the 305 learning objectives, ranked (generated)
 data/practice.js    the written practice bank          (generated)
 figures/            diagrams cropped from the papers   (generated, committed)
 practice/*.js       the written practice, one file per group of units (edit these)
@@ -148,6 +150,10 @@ vocabulary, so the top of `#/goals` is the highest-yield work.
     its distinctive terms, drops anything appearing in more than 12 per cent of questions as too
     generic to be evidence, and counts a question as testing the objective when it carries two
     of those terms including at least one rare one. That ranking is what orders `#/goals`.
+    Each objective's topic comes from its code, using the code ranges of the subject
+    programme's long-term plan, with a short table of deliberate exceptions; matching on the
+    wording used to file, say, Group 14 oxidation states under electrochemistry. Objectives the
+    programme lists but the calendars omit are added from a table at the top of the script.
 
 To regenerate after adding papers:
 
