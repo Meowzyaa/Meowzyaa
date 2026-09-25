@@ -19,9 +19,9 @@ and answer it. No build step, no dependencies, no backend.
   answers graded A, C and E, taken from the OOK example-answer booklets.
 - **Self marking everywhere else.** A work pad, a link straight to the right page of the PDF,
   and a marks scale so you score yourself out of the real mark total.
-- **A syllabus mode.** All 305 learning objectives from the grade 11 and 12 course calendars
-  (plus 12.4.2.18, which the subject programme lists and the calendar leaves out), ranked by how
-  hard the past papers lean on each one, each linking to the archive questions that test it and
+- **A syllabus mode.** All 305 learning objectives of the NIS subject programme (Issue 12,
+  2025), taken from the grade 11 and 12 course calendars and checked against the programme,
+  ranked by how hard the past papers lean on each one, each linking to the archive questions that test it and
   to written practice with worked solutions: 128 questions across 83 objectives so far.
 - **A practice builder.** Choose topics, which questions (not tried, due, got wrong, flagged, all),
   how many, and a mode, in the style of UWorld's "create test". One-click Quick 20, Review due and
@@ -143,17 +143,25 @@ vocabulary, so the top of `#/goals` is the highest-yield work.
    vocabulary, scoring stem matches double option matches. Roughly 30 questions the rules could
    not place confidently are assigned by hand in the override table at the top of `build.pl`.
 8. `tools/build.pl` joins it all up and emits `data/questions.js`.
-9. `tools/extract_goals.pl` pulls the learning objectives out of the course calendars. Those
-   are two-column tables, so an objective is its code line plus every following line starting
-   in the same column.
+9. `tools/extract_goals.pl` pulls the learning objectives out of the course calendars (NIS
+   Aktobe, 2023-2024). Those are two-column tables, so an objective is its code line plus every
+   following line starting in the same column.
 10. `tools/rank_goals.pl` scores each objective against the archive. It reduces the objective to
     its distinctive terms, drops anything appearing in more than 12 per cent of questions as too
     generic to be evidence, and counts a question as testing the objective when it carries two
     of those terms including at least one rare one. That ranking is what orders `#/goals`.
     Each objective's topic comes from its code, using the code ranges of the subject
     programme's long-term plan, with a short table of deliberate exceptions; matching on the
-    wording used to file, say, Group 14 oxidation states under electrochemistry. Objectives the
-    programme lists but the calendars omit are added from a table at the top of the script.
+    wording used to file, say, Group 14 oxidation states under electrochemistry.
+
+    The calendars copy the subject programme's objective tables (unchanged since Issue 11,
+    2018) word for word, except in 16 places: one objective missing (12.4.2.18), "Term n"
+    headings swallowed into the text, a typo, and the school's own extra lines merged into
+    objectives. A table at the top of the script restores the programme's wording for those,
+    which also stops the extra lines inflating the match counts (12.3.4.18 matched 60 questions
+    on the merged text and none on its own). Short objectives such as "be able to carry out
+    titrations and the associated calculations" now match few questions, because the matcher
+    needs two distinctive terms; their counts understate how often the topic is tested.
 
 To regenerate after adding papers:
 
