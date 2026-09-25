@@ -15,7 +15,7 @@ window.CHEMPREP_UNITS = [
       { id: 'kinetics',         name: 'Reaction kinetics',           code: '11.3.2', blurb: 'Rate equations, orders, catalysts, Boltzmann distributions.' },
       { id: 'equilibria',       name: 'Chemical equilibria',         code: '11.3.3', blurb: 'Kc, Kp, Le Chatelier, industrial compromise conditions.' },
       { id: 'acids-bases',      name: 'Acids, bases and buffers',    code: '12.3.4', blurb: 'pH, Ka and Kb, titration curves, indicators, buffering.' },
-      { id: 'electrochemistry', name: 'Electrochemistry',            code: '12.3',   blurb: 'Electrode potentials, cells, electrolysis, redox bookkeeping.' }
+      { id: 'electrochemistry', name: 'Electrochemistry',            code: '11.2.3', blurb:'Electrode potentials, cells, electrolysis, redox bookkeeping.' }
     ]
   },
   {
@@ -42,8 +42,12 @@ window.CHEMPREP_UNITS = [
       { id: 'alcohols',         name: 'Alcohols and phenols',        code: '11.4.2', blurb: 'Oxidation, dehydration, ethanol routes, phenol reactivity.' },
       { id: 'carbonyl',         name: 'Carbonyls, acids and esters', code: '12.4.2', blurb: 'Aldehydes, ketones, carboxylic acids, esterification, acylation.' },
       { id: 'aromatic',         name: 'Arenes',                      code: '12.4.2', blurb: 'Benzene stability, nitration, Friedel-Crafts acylation.' },
-      { id: 'amines-amino',     name: 'Amines and amino acids',      code: '12.5.1', blurb: 'Basicity, zwitterions, peptide bonds, protein structure.' },
-      { id: 'polymers',         name: 'Polymerisation',              code: '12.4.2', blurb: 'Addition and condensation polymers, repeat units, disposal.' }
+      { id: 'amines-amino',     name: 'Amines and amino acids',      code: '12.5.1', blurb: 'Basicity, zwitterions, proteins, enzymes, DNA, ATP and metals in the body.' },
+      { id: 'polymers',         name: 'Polymerisation',              code: '12.4.2', blurb: 'Addition and condensation polymers, repeat units, disposal.' },
+      // Units of the subject programme that no past paper question is filed
+      // under yet; they carry written practice only.
+      { id: 'materials',        name: 'Chemistry and materials design', code: '12.4.2', blurb: 'Drug design and delivery, chirality in medicine, nanoparticles, green chemistry.' },
+      { id: 'synthesis',        name: 'Organic synthesis',           code: '12.4.2', blurb: 'Multi-step routes, reagents and conditions, yield, purification, tests.' }
     ]
   },
   {
@@ -51,7 +55,7 @@ window.CHEMPREP_UNITS = [
     name: 'Analysis',
     note: 'Spectra turn up in every paper. Fast marks once the patterns click.',
     topics: [
-      { id: 'analysis', name: 'Analytical techniques', code: '12.4', blurb: 'Mass spectra, NMR, infra-red, chromatography.' }
+      { id: 'analysis', name: 'Analytical techniques', code: '11.1.4', blurb:'Mass spectra, NMR, infra-red, chromatography.' }
     ]
   }
 ];
