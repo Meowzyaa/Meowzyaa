@@ -147,6 +147,22 @@ sub unit_topic {
   return '';
 }
 
+# Objectives whose programme wording is too short for the term matcher (it
+# needs two distinctive terms): a question counts when it matches every pattern.
+# "be able to carry out titrations and the associated calculations" matched one
+# question on its own words; these find the ones that are really about it.
+my %MATCH = (
+  '12.2.1.26' => [qr/colorimet|absorbance|calibration curve/],
+  '12.3.4.8'  => [qr/weak(?:ly)?\s+(?:acid|base|alkali)|partially\s+dissociat|dissociates?\s+(?:slightly|partially)/],
+  '12.3.4.13' => [qr/titrat|titre|burette/],
+  '12.3.4.16' => [qr/buffer/],
+  '12.3.4.18' => [qr/aqua|\(h2o\)6|\(h₂o\)₆/],
+  '12.4.2.11' => [qr/carboxylic|(?:methanoic|ethanoic|propanoic|benzoic) acid/, qr/carbonate|weak(?:ly)? acid|dissociat|effervesc/],
+  '12.4.2.24' => [qr/friedel|acylat|alcl3|alcl₃/, qr/benzene|arene|aromatic|c6h6|c₆h₆|phenyl/],
+  '12.4.2.33' => [qr/condensation polymer|polyester|polyamide|nylon|terylene|kevlar/],
+  '12.5.1.1'  => [qr/\bamines?\b|(?:methyl|ethyl|phenyl|propyl)amine/, qr/\bbases?\b|\bbasic|primary|secondary|tertiary|lone pair|proton/],
+);
+
 # where the site files a programme topic somewhere else on purpose
 my %TOPIC_FIX = (
   '11.2.1.2'  => 'electron-config',   # the Aufbau principle and the table's shape
@@ -167,7 +183,13 @@ my @rows;
 for my $o (@objs) {
   my @t = grep { ($df{$_} || 0) > 0 && ($df{$_} || 0) <= $maxdf } terms($o->{text});
   my (@ids, %seenTopic);
-  if (@t) {
+  if (my $pats = $MATCH{ $o->{code} }) {
+    for my $i (0 .. $#docs) {
+      next if grep { $docs[$i] !~ $_ } @$pats;
+      push @ids, $meta[$i]{id};
+      $seenTopic{ $meta[$i]{topic} }++;
+    }
+  } elsif (@t) {
     for my $i (0 .. $#docs) {
       my ($n, $rare) = (0, 0);
       for my $w (@t) {

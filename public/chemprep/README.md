@@ -160,8 +160,9 @@ vocabulary, so the top of `#/goals` is the highest-yield work.
     objectives. A table at the top of the script restores the programme's wording for those,
     which also stops the extra lines inflating the match counts (12.3.4.18 matched 60 questions
     on the merged text and none on its own). Short objectives such as "be able to carry out
-    titrations and the associated calculations" now match few questions, because the matcher
-    needs two distinctive terms; their counts understate how often the topic is tested.
+    titrations and the associated calculations" give the matcher too few distinctive terms, so
+    nine of them are matched by explicit patterns instead (`%MATCH`, all must match), checked by
+    reading what they catch: titrations 7, buffers 9, metal-aqua ions 14, Friedel-Crafts 6.
 
 To regenerate after adding papers:
 
