@@ -75,17 +75,72 @@ while ($oraw =~ /\{"code":"([^"]+)","text":"((?:[^"\\]|\\.)*)"\}/g) {
   push @objs, { code => $1, text => $2 };
 }
 
+# Objectives the subject programme lists but the course calendars leave out.
+# Source: NIS Subject Programme "Chemistry" (advanced level), Issue 12, 2025.
+my %PROGRAMME_ONLY = (
+  '12.4.2.18' => 'understand, be able to describe and be able to draw the bonding in benzene',
+);
+my %have = map { $_->{code} => 1 } @objs;
+for my $c (sort keys %PROGRAMME_ONLY) {
+  push @objs, { code => $c, text => $PROGRAMME_ONLY{$c} } unless $have{$c};
+}
+sub codekey { sprintf('%02d%02d%02d%03d', split /\./, shift) }
+@objs = sort { codekey($a->{code}) cmp codekey($b->{code}) } @objs;
+
 sub esc { my $s = shift; $s =~ s{\\}{\\\\}g; $s =~ s{"}{\\"}g; $s =~ s/[\r\n\t]/ /g; return $s; }
 
-# objectives whose wording defeats the keyword rules, checked by hand
+# The code places an objective exactly: the subject programme's long-term plan
+# (pp. 42-53) fixes which code range belongs to which unit. Keyword matching on
+# the wording filed Group 14 oxidation states under electrochemistry and ionic
+# bonding under energetics, so it is no longer used for this.
+sub unit_topic {
+  my ($g, $u, $s, $n) = split /\./, shift;
+  my $k = "$g.$u.$s";
+  return $n <= 3 ? 'atomic-structure' : 'moles'        if $k eq '11.1.1';
+  return 'atomic-structure'                             if $k eq '11.1.2';
+  return 'electron-config'                              if $k eq '11.1.3';
+  return $n <= 27 ? 'bonding' : 'analysis'              if $k eq '11.1.4';
+  return $n <= 7 ? 'periodicity' : $n <= 13 ? 'group17' : 'group2' if $k eq '11.2.1';
+  return 'moles'                                        if $k eq '11.2.2';
+  return 'electrochemistry'                             if $k eq '11.2.3';
+  return 'energetics'                                   if $k eq '11.3.1';
+  return 'kinetics'                                     if $k eq '11.3.2';
+  return 'equilibria'                                   if $k eq '11.3.3';
+  if ($k eq '11.4.2') {
+    return 'organic-basics' if $n <= 7;
+    return 'hydrocarbons'   if $n <= 24;
+    return 'alcohols'       if $n <= 30;
+    return 'halogenoalkanes';
+  }
+  return $n <= 6 ? 'group14' : $n <= 19 ? 'nitrogen-sulfur' : 'transition-metals' if $k eq '12.2.1';
+  return $n <= 16 ? 'acids-bases' : 'aqueous-inorganic' if $k eq '12.3.4';
+  return 'materials'                                    if $k eq '12.4.1';
+  if ($k eq '12.4.2') {
+    return 'organic-basics' if $n <= 5;
+    return 'carbonyl'       if $n <= 17;
+    return 'aromatic'       if $n <= 24;
+    return 'polymers'       if $n <= 38;
+    return 'materials'      if $n <= 48;
+    return 'synthesis';
+  }
+  return 'amines-amino'                                 if $k eq '12.5.1';
+  return '';
+}
+
+# where the site files a programme topic somewhere else on purpose
 my %TOPIC_FIX = (
-  '11.1.1.4'  => 'moles',            '11.1.4.11' => 'bonding',
-  '11.1.4.32' => 'analysis',         '11.2.1.7'  => 'periodicity',
-  '11.2.1.16' => 'group2',           '11.4.2.14' => 'hydrocarbons',
-  '11.3.1.12' => 'energetics',       '12.2.1.8'  => 'nitrogen-sulfur',
-  '12.3.4.19' => 'aqueous-inorganic','12.4.2.1'  => 'organic-basics',
-  '12.4.2.24' => 'aromatic',         '12.4.2.53' => 'organic-basics',
-  '12.5.1.28' => 'transition-metals',
+  '11.2.1.2'  => 'electron-config',   # the Aufbau principle and the table's shape
+  '11.2.1.4'  => 'electron-config',   # reading configurations off the table
+  '11.3.2.2'  => 'moles',             # the ideal gas equation and molar volume
+  '11.4.2.7'  => 'bonding',           # sigma and pi bonds, hybridisation
+  '11.4.2.16' => 'organic-basics',    # E/Z isomerism sits with the other isomerism
+  '11.4.2.17' => 'organic-basics',    # electrophile and nucleophile, used everywhere
+  '11.4.2.21' => 'polymers',          # addition polymerisation
+  '11.4.2.22' => 'polymers',
+  '11.4.2.24' => 'polymers',          # uses of poly(alkenes) and recycling
+  '12.3.4.17' => 'acids-bases',       # Arrhenius, Bronsted-Lowry and Lewis
+  '12.4.2.45' => 'polymers',          # properties of polymers from their structure
+  '12.5.1.28' => 'transition-metals', # toxic metals
 );
 
 my @rows;
@@ -105,13 +160,15 @@ for my $o (@objs) {
       $seenTopic{ $meta[$i]{topic} }++;
     }
   }
-  # the objective's own wording places it far more reliably than the topics of
-  # the questions that happen to match it; the matches are only a fallback
-  my ($topic) = Topics::classify($o->{text}, '');
-  if ($topic eq 'unsorted' && %seenTopic) {
-    ($topic) = sort { $seenTopic{$b} <=> $seenTopic{$a} || $a cmp $b } keys %seenTopic;
+  # the code decides; the wording and the matched questions are only a fallback
+  # for a code outside the programme's ranges
+  my $topic = exists $TOPIC_FIX{ $o->{code} } ? $TOPIC_FIX{ $o->{code} } : unit_topic($o->{code});
+  if ($topic eq '') {
+    ($topic) = Topics::classify($o->{text}, '');
+    if ($topic eq 'unsorted' && %seenTopic) {
+      ($topic) = sort { $seenTopic{$b} <=> $seenTopic{$a} || $a cmp $b } keys %seenTopic;
+    }
   }
-  $topic = $TOPIC_FIX{ $o->{code} } if exists $TOPIC_FIX{ $o->{code} };
   push @rows, {
     code  => $o->{code},
     text  => $o->{text},

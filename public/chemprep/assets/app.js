@@ -307,6 +307,16 @@
     return { total: qs.length, ok: ok, no: no, seen: seen };
   }
 
+  // the objectives filed under a topic, and the written practice set on them;
+  // a unit with no archive questions still has these
+  function goalsFor(topicId) {
+    return GOALS.filter(function (g) { return g.topic === topicId; });
+  }
+
+  function writtenFor(topicId) {
+    return goalsFor(topicId).reduce(function (acc, g) { return acc.concat(g.practice); }, []);
+  }
+
   function overall() {
     var ok = 0, no = 0, seen = 0;
     QS.forEach(function (q) {
@@ -883,25 +893,27 @@
     if (!shown.length) {
       list.appendChild(el('div', 'empty', '<b>Nothing here</b><span>Loosen the filters.</span>'));
     }
-    shown.forEach(function (g) {
-      var st = practiceStats(g.code);
-      var a = el('a', 'goal-row');
-      a.href = '#/goal/' + g.code;
-      var t = TOPIC[g.topic];
-      a.innerHTML =
-        '<span class="gr-code">' + esc(g.code) + '</span>' +
-        '<span class="gr-text">' + chem(g.text) + '</span>' +
-        '<span class="gr-meta">' +
-          (t ? '<span class="pill">' + esc(t.name) + '</span>' : '') +
-          (g.practice.length
-            ? '<span class="pill ' + (st.seen === st.total ? 'ok' : 'key') + '">' +
-              st.ok + '/' + st.total + ' practice</span>'
-            : '<span class="pill nokey">no practice yet</span>') +
-          '<span class="pill marks">' + g.hits + ' in papers</span>' +
-        '</span>';
-      list.appendChild(a);
-    });
+    shown.forEach(function (g) { list.appendChild(goalRow(g, true)); });
     main.appendChild(list);
+  }
+
+  function goalRow(g, withTopic) {
+    var st = practiceStats(g.code);
+    var a = el('a', 'goal-row');
+    a.href = '#/goal/' + g.code;
+    var t = withTopic && TOPIC[g.topic];
+    a.innerHTML =
+      '<span class="gr-code">' + esc(g.code) + '</span>' +
+      '<span class="gr-text">' + chem(g.text) + '</span>' +
+      '<span class="gr-meta">' +
+        (t ? '<span class="pill">' + esc(t.name) + '</span>' : '') +
+        (g.practice.length
+          ? '<span class="pill ' + (st.seen === st.total ? 'ok' : 'key') + '">' +
+            st.ok + '/' + st.total + ' practice</span>'
+          : '<span class="pill nokey">no practice yet</span>') +
+        '<span class="pill marks">' + g.hits + ' in papers</span>' +
+      '</span>';
+    return a;
   }
 
   function viewGoal(code) {
@@ -1078,7 +1090,7 @@
       frag.appendChild(ps);
     }
 
-    frag.appendChild(el('div', 'sec-head units-head', '<div><h2 class="sec">All topics</h2><p>The 25 units of the NIS syllabus, with how far you are through each.</p></div>'));
+    frag.appendChild(el('div', 'sec-head units-head', '<div><h2 class="sec">All topics</h2><p>The ' + Object.keys(TOPIC).length + ' units of the NIS syllabus, with how far you are through each.</p></div>'));
 
     UNITS.forEach(function (u) {
       var head = el('div', 'sec-head');
@@ -1100,8 +1112,11 @@
           '<p class="tc-blurb">' + esc(t.blurb) + '</p>' +
           '<div class="tc-bar"><i class="ok" style="width:' + okPct + '%"></i>' +
           '<i class="no" style="width:' + noPct + '%"></i></div>' +
-          '<div class="tc-foot"><span>' + (st.seen ? st.seen + ' tried' : 'Not started') + '</span>' +
-          (st.seen ? '<b>' + Math.round(okPct) + '% right</b>' : '') + '</div>';
+          '<div class="tc-foot">' + (st.total
+            ? '<span>' + (st.seen ? st.seen + ' tried' : 'Not started') + '</span>' +
+              (st.seen ? '<b>' + Math.round(okPct) + '% right</b>' : '')
+            : '<span>No past paper questions yet</span>' +
+              (writtenFor(t.id).length ? '<b>' + writtenFor(t.id).length + ' written</b>' : '')) + '</div>';
         grid.appendChild(a);
       });
       frag.appendChild(grid);
@@ -1202,6 +1217,24 @@
       '<h1 class="display" style="font-size:clamp(26px,3.4vw,36px)">' + esc(t.name) + '</h1>' +
       '<p class="lede">' + esc(t.blurb) + '</p>';
     main.appendChild(head);
+
+    if (!all.length) {
+      var goals = goalsFor(id), nw = writtenFor(id).length;
+      main.appendChild(el('div', 'empty', icon('inbox') + '<b>No past paper questions yet</b><span>None of the ' +
+        QS.length + ' archive questions is filed under this unit. ' + (nw
+          ? 'The ' + nw + ' written practice question' + (nw === 1 ? '' : 's') + ' on its objectives below' + (nw === 1 ? ' has' : ' have') + ' worked solutions.'
+          : 'Its syllabus objectives are below.') + '</span>'));
+      if (goals.length) {
+        var gh = el('div', 'sec-head');
+        gh.innerHTML = '<div><h2 class="sec">Syllabus objectives</h2><p class="unit-note">Open one for its written practice ' +
+          'and for any archive questions whose wording matches it.</p></div>';
+        main.appendChild(gh);
+        var gl = el('div', 'goal-list');
+        goals.forEach(function (g) { gl.appendChild(goalRow(g, false)); });
+        main.appendChild(gl);
+      }
+      return;
+    }
 
     var cta = el('div', 'cta-row');
     var drillBtn = el('a', 'btn primary', icon('zap') + 'Practise this topic');
@@ -2186,7 +2219,9 @@
         var n = questionsFor(sec.topic).length;
         var t2 = TOPIC[sec.topic];
         s.innerHTML = '<div class="sec-head"><div><h2 class="sec">' + esc(sec.title) + '</h2>' +
-          (t2 ? '<p class="unit-note"><a href="#/topic/' + sec.topic + '">' + n + ' question' + (n === 1 ? '' : 's') + ' on this in the archive</a></p>' : '') +
+          (t2 ? '<p class="unit-note"><a href="#/topic/' + sec.topic + '">' + (n
+            ? n + ' question' + (n === 1 ? '' : 's') + ' on this in the archive'
+            : 'No archive questions yet; see the written practice') + '</a></p>' : '') +
           '</div></div>' +
           '<div class="ref-list">' + items.map(refItemHtml).join('') + '</div>';
         body.appendChild(s);
@@ -2266,9 +2301,9 @@
   // demo, which is a live question so the marking states can be tried safely.
   var TOUR = [
     { target: '#nav', place: 'right', icon: 'house', title: 'Topics live in the sidebar',
-      body: 'The 25 units of the syllabus, each with the number of past paper questions filed under it. Above them: the overview, the practice builder, your review, the syllabus objectives and the reference.',
+      body: 'The ' + Object.keys(TOPIC).length + ' units of the syllabus, each with the number of past paper questions filed under it. Above them: the overview, the practice builder, your review, the syllabus objectives and the reference.',
       mobileTarget: '#side-toggle', mobileIcon: 'menu', mobileTitle: 'Topics live behind this button',
-      mobileBody: 'It opens the 25 units of the syllabus, each with the number of past paper questions filed under it, plus practice, review, the syllabus objectives and the reference.' },
+      mobileBody: 'It opens the ' + Object.keys(TOPIC).length + ' units of the syllabus, each with the number of past paper questions filed under it, plus practice, review, the syllabus objectives and the reference.' },
     { target: '#search', mobileTarget: '#search-toggle', icon: 'search', title: 'Search anything',
       body: 'A formula, a reagent, a topic, a phrase from a mark scheme. Results include the reference entries. Press / to jump here from anywhere.' },
     { demo: true, icon: 'check', title: 'Try one',
@@ -2276,8 +2311,8 @@
     { target: '.tb-link[href="#/review"]', mobileTarget: '.tab-item[href="#/review"]', icon: 'again', title: 'Spaced review',
       body: 'Anything you miss, or get right by guessing, comes back after 1, 3, 7, 16 and 35 days. The badge shows what is due today. Flags live here too.' },
     { target: '.tb-link[href="#/goals"]', icon: 'list', title: 'Syllabus objectives',
-      body: 'All 304 learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it.',
-      mobileBody: 'All 304 learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it. On a phone it sits near the top of the menu.' },
+      body: 'All ' + GOALS.length + ' learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it.',
+      mobileBody: 'All ' + GOALS.length + ' learning objectives from the course calendars, ranked by how often the papers test them, each with written practice and the archive questions that match it. On a phone it sits near the top of the menu.' },
     { target: '.tb-link[href="#/reference"]', icon: 'book', title: 'Reference, the справочник',
       body: 'Formulae, definitions, colour changes and the data booklet ion tests, in the wording mark schemes want. Press r from anywhere.' },
     { target: '#help-btn', icon: 'help', title: 'Shortcuts, and this tour',
