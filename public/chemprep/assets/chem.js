@@ -113,8 +113,10 @@
     // electron configuration: 1s2 2p6 3d10
     out = out.replace(/\b(\d[spdf])(\d{1,2})\b/g, '$1<sup>$2</sup>');
 
-    // scientific notation, written as 1.5 × 105 or typed as 1.5 x 10-5
+    // scientific notation, written as 1.5 × 105 or typed as 1.5 x 10-5; an
+    // unsigned exponent never starts with 0, so "x 100" and "x 1000" stay put
     out = out.replace(/(\d)\s*[x×]\s*10\s*([-−–]?\d{1,2})(?![\d.])/g, function (m, d, exp) {
+      if (exp.charAt(0) === '0') return m;
       return d + ' × 10<sup>' + exp.replace(/[-–]/, '−') + '</sup>';
     });
 
