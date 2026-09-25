@@ -75,14 +75,34 @@ while ($oraw =~ /\{"code":"([^"]+)","text":"((?:[^"\\]|\\.)*)"\}/g) {
   push @objs, { code => $1, text => $2 };
 }
 
-# Objectives the subject programme lists but the course calendars leave out.
-# Source: NIS Subject Programme "Chemistry" (advanced level), Issue 12, 2025.
-my %PROGRAMME_ONLY = (
+# Where the course calendar (NIS Aktobe, 2023-2024) differs from the subject
+# programme, the programme wins. Source: NIS Subject Programme "Chemistry"
+# (advanced level), Issue 12, 2025, long-term plan pp. 42-53, whose objective
+# tables are unchanged since Issue 11 (2018). The calendar copies them word for
+# word except for these: one it leaves out, "Term n" headings the extractor
+# swallowed, a typo, and the school's own extra lines merged into objectives.
+my %PROGRAMME = (
   '12.4.2.18' => 'understand, be able to describe and be able to draw the bonding in benzene',
+  '11.1.4.43' => 'understand that these techniques can yield information both by empirical analysis of the spectral data or by comparison with the spectra of known substances',
+  '11.2.1.7'  => 'recognise and be able to account for, in terms of effective nuclear charge, the following trends down groups: bond types, melting and boiling points, reactivity etc. (recognise and be able to account for trends down groups using (as a minimum) groups 1 and 17 as exemplification)',
+  '11.3.3.7'  => 'be able to predict the effect of changing temperature on Kc and understand that Kc is not affected by changes in concentration or the addition of a catalyst',
+  '12.2.1.26' => 'understand the use of and be able to use spectrometry to determine concentration',
+  '12.3.4.8'  => 'understand that weak acids and bases dissociate slightly in water',
+  '12.3.4.13' => 'be able to carry out titrations and the associated calculations',
+  '12.3.4.16' => 'know some uses of buffer solutions',
+  '12.3.4.18' => 'recognise and know the structure of metal-aqua ions',
+  '12.4.2.11' => 'recognise carboxylic acids as weak acids and know their reaction with carbonates',
+  '12.4.2.12' => 'know the esterification reaction and the hydrolysis reaction, recognise these as equilibria and determine appropriate conditions using equilibrium considerations',
+  '12.4.2.24' => 'understand Friedel-Crafts acylation and its importance in synthesis',
+  '12.4.2.33' => 'know a range of examples of condensation polymers and some of their common uses',
+  '12.5.1.1'  => 'know the classification of amines and understand that they act as Bronsted-Lowry bases',
+  '12.5.1.3'  => 'understand the mechanism of formation of amines from haloalkanes by nucleophilic substitution and from nitriles by reduction',
+  '12.5.1.28' => 'recognise that some metals are very toxic and be able to describe simply their effects on proteins',
 );
 my %have = map { $_->{code} => 1 } @objs;
-for my $c (sort keys %PROGRAMME_ONLY) {
-  push @objs, { code => $c, text => $PROGRAMME_ONLY{$c} } unless $have{$c};
+$_->{text} = $PROGRAMME{ $_->{code} } for grep { exists $PROGRAMME{ $_->{code} } } @objs;
+for my $c (sort keys %PROGRAMME) {
+  push @objs, { code => $c, text => $PROGRAMME{$c} } unless $have{$c};
 }
 sub codekey { sprintf('%02d%02d%02d%03d', split /\./, shift) }
 @objs = sort { codekey($a->{code}) cmp codekey($b->{code}) } @objs;
