@@ -155,13 +155,13 @@ CHEMPREP_PRACTICE.push(
   id: 'p-11.2.3.8-2', goal: '11.2.3.8', kind: 'mcq', marks: 1,
   stem: 'What are the standard conditions for measuring an electrode potential?',
   options: {
-    A: '298 K, 100 kPa, all solutions at 1.00 mol dm-3',
-    B: '273 K, 100 kPa, all solutions at 1.00 mol dm-3',
-    C: '298 K, 100 kPa, all solutions at 0.100 mol dm-3',
+    A: '298 K, 101 kPa, all solutions at 1.00 mol dm-3',
+    B: '273 K, 101 kPa, all solutions at 1.00 mol dm-3',
+    C: '298 K, 101 kPa, all solutions at 0.100 mol dm-3',
     D: '298 K, 1000 kPa, all solutions saturated'
   },
   answer: 'A',
-  why: 'Standard conditions are 298 K, a pressure of 100 kPa for any gases, and 1.00 mol dm-3 for every solution involved, measured against a standard hydrogen electrode that is defined as exactly 0.00 V. B uses 273 K, which is standard temperature for gas calculations but not for electrode potentials. Concentration matters because the electrode potential shifts if you change it, which is why non-standard cells do not give the tabulated values.'
+  why: 'Standard conditions are 298 K, a pressure of 101 kPa for any gases (the Cambridge A level value; IUPAC uses 100 kPa), and 1.00 mol dm-3 for every solution involved, measured against a standard hydrogen electrode that is defined as exactly 0.00 V. B uses 273 K, which is standard temperature for gas calculations but not for electrode potentials. Concentration matters because the electrode potential shifts if you change it, which is why non-standard cells do not give the tabulated values.'
 },
 
 // ---- 11.2.3.1  oxidation and reduction ----------------------------------
