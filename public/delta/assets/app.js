@@ -2652,7 +2652,7 @@
   // progress lives in this browser only, so a file is the way to carry it to
   // another device or keep it safe
   $('#export-btn').addEventListener('click', function () {
-    var blob = new Blob([JSON.stringify({ results: S.results, notes: S.notes, flags: S.flags, srs: S.srs, days: S.days, exported: new Date().toISOString() }, null, 1)],
+    var blob = new Blob([JSON.stringify({ app: 'delta', results: S.results, notes: S.notes, flags: S.flags, srs: S.srs, days: S.days, exported: new Date().toISOString() }, null, 1)],
       { type: 'application/json' });
     var a = el('a');
     a.href = URL.createObjectURL(blob);
@@ -2672,16 +2672,27 @@
     reader.onload = function () {
       try {
         var v = JSON.parse(reader.result);
-        if (!v || typeof v.results !== 'object') throw new Error('shape');
-        Object.keys(v.results || {}).forEach(function (k) { S.results[k] = v.results[k]; });
-        Object.keys(v.notes || {}).forEach(function (k) { S.notes[k] = v.notes[k]; });
-        Object.keys(v.flags || {}).forEach(function (k) { S.flags[k] = v.flags[k]; });
-        Object.keys(v.srs || {}).forEach(function (k) { S.srs[k] = v.srs[k]; });
+        var ids = v && v.results && typeof v.results === 'object' ? Object.keys(v.results) : null;
+        // chemprep saves the same shape, so make sure the file is delta's: newer
+        // exports say so, older ones must name at least one delta task
+        if (!ids || (v.app ? v.app !== 'delta' : ids.length && !ids.some(function (k) { return QBY[k]; }))) throw new Error('shape');
+        // task by task, the newer answer wins and brings its review schedule,
+        // so an old file cannot undo work done since it was saved
+        var taken = 0;
+        ids.forEach(function (k) {
+          var mine = S.results[k], theirs = v.results[k];
+          if (!QBY[k] || !theirs || (mine && mine.at >= theirs.at)) return;
+          S.results[k] = theirs;
+          if (v.srs && v.srs[k]) S.srs[k] = v.srs[k]; else delete S.srs[k];
+          taken++;
+        });
+        Object.keys(v.notes || {}).forEach(function (k) { if (QBY[k]) S.notes[k] = v.notes[k]; });
+        Object.keys(v.flags || {}).forEach(function (k) { if (QBY[k]) S.flags[k] = v.flags[k]; });
         Object.keys(v.days || {}).forEach(function (k) { S.days[k] = Math.max(S.days[k] || 0, v.days[k]); });
         save();
         refreshChrome();
         route();
-        toast('progress imported');
+        toast(taken ? 'progress imported, ' + taken + ' newer answer' + (taken === 1 ? '' : 's') : 'imported; nothing in it is newer than what is here');
       } catch (e) {
         toast('that file is not a delta export');
       }
