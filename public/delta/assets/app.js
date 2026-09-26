@@ -346,29 +346,60 @@
   }
 
   var SUPERS = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-' };
+  var FRACS = { '½': '1/2', '⅓': '1/3', '⅔': '2/3', '¼': '1/4', '¾': '3/4' };
 
   // drops a leading label so the bare value is compared: "x =", "f′(2) =",
-  // "dr/dt =", "s^2 =", "δy ≈", "p(x=2) =", "|z| ="
+  // "dr/dt =", "s^2 =", "δy ≈", "p(x=2) =", "|z| =", "a × b =", "var(2x+5) ="
   function dropLabel(t) {
-    return t.replace(/^p\([^)]*\)[=≈]/, '').replace(/^\|[a-z]\|[=≈]/, '')
-      .replace(/^[a-zα-ω][a-z0-9'′″()\/^]*[=≈]/, '');
+    return t.replace(/^p\([^)]*\)[=≈~]/, '').replace(/^\|[a-z]\|[=≈~]/, '')
+      .replace(/^[a-zα-ω][a-z0-9'′″()\/^+\-×]*[=≈~]/, '').replace(/^[=≈~]/, '');
   }
 
-  // One spelling for the many ways the same answer gets typed: spaces,
-  // superscripts, the three kinds of minus, ≤ and <=, pi and π, degree signs.
-  // A set answer ("x = 0 and x = 1") is split, stripped and sorted.
+  // drops a unit typed after the value: "12 cm", "24π cm²", "0.16 cm/s", "14 minutes"
+  function dropUnit(t) {
+    return t.replace(/([\dπ)])(?:[ckm]?m|k?g|s|sec|seconds?|mins?|minutes?|h|hours?|rad|radians|tenge|(?:sq|square)?units?)(?:\^?[23])?(?:\/(?:s|min|h)|per(?:second|minute|hour))?$/, '$1');
+  }
+
+  // One spelling for the many ways the same answer gets typed: spaces, labels
+  // and units, superscripts, ½, the three kinds of minus, ≤ and <=, pi and π,
+  // 2.50 and 2.5, .5 and 0.5, and ; or , between coordinates. A set answer
+  // ("x = 0 and x = 1") is split, stripped and sorted.
   function normAnswer(v, isSet) {
     var t = String(v == null ? '' : v).toLowerCase()
       .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, function (m) { return '^' + m.split('').map(function (c) { return SUPERS[c]; }).join(''); })
-      .replace(/[−–—]/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/pi/g, 'π')
-      .replace(/°/g, '').replace(/\*/g, '').replace(/\s+/g, '');
-    if (!isSet) return dropLabel(t);
-    return t.replace(/and|or|;/g, ',').split(',').map(dropLabel).filter(Boolean).sort().join(',');
+      .replace(/[₀-₉]/g, function (c) { return String(c.charCodeAt(0) - 8320); })
+      .replace(/[½⅓⅔¼¾]/g, function (c) { return FRACS[c]; })
+      .replace(/[−–—]/g, '-').replace(/[≤⩽]/g, '<=').replace(/[≥⩾]/g, '>=')
+      .replace(/(^|[^a-z])pi(?![a-z])/g, '$1π').replace(/[‘’`´]/g, '\'')
+      .replace(/°/g, '').replace(/[*·⋅]/g, '');
+    // "and" and "or" separate values only as words, so "normal" or "random" stay whole
+    if (isSet) t = t.replace(/(^|\s)(?:and|or|и|или|және|немесе)(?=\s|$)|&/g, '$1;').replace(/[{}]/g, '');
+    t = t.replace(/\s+/g, '').replace(/;/g, ',')
+      .replace(/(\d)\.(\d*?)0+(?!\d)/g, function (m, a, b) { return a + (b ? '.' + b : ''); })
+      .replace(/(^|\D)\.(?=\d)/g, function (m, a) { return a + '0.'; })
+      .replace(/\.(?!\d)/g, '');
+    if (!isSet) return dropUnit(dropLabel(t));
+    return t.split(',').map(function (p) { return dropUnit(dropLabel(p)); }).filter(Boolean).sort().join(',');
+  }
+
+  // awrt, "answers which round to" in mark scheme terms: on a task with
+  // awrt: true, a longer decimal such as 0.23347 counts for a key of 0.233
+  function roundsTo(g, key) {
+    var d = /^-?\d+\.(\d+)$/.exec(key);
+    if (!d || !/^-?\d+\.\d+$/.test(g) || g.split('.')[1].length <= d[1].length) return false;
+    return Math.abs(parseFloat(g) - parseFloat(key)) <= 0.5 * Math.pow(10, -d[1].length) + 1e-12;
   }
 
   function checkShort(q, given) {
-    var g = normAnswer(given, q.set);
-    return g !== '' && q.accept.some(function (a) { return normAnswer(a, q.set) === g; });
+    var s = String(given == null ? '' : given);
+    // 0,5 is how most students here write 0.5, so a comma between two digits
+    // is also read as a decimal point; "0,1" can still mean the pair 0 and 1
+    var tries = /\d,\d/.test(s) ? [s, s.replace(/(\d),(?=\d)/g, '$1.')] : [s];
+    var keys = q.accept.map(function (a) { return normAnswer(a, q.set); });
+    return tries.some(function (t) {
+      var g = normAnswer(t, q.set);
+      return g !== '' && keys.some(function (k) { return k === g || (!!q.awrt && roundsTo(g, k)); });
+    });
   }
 
   // the verdict for whatever was picked or typed, or null when nothing can mark it
@@ -662,6 +693,9 @@
       (ok ? 'Correct' : 'Not accepted. The answer is ' + chem(answerShown(q)) + '.') + '</span>');
   }
 
+  var SHORT_HINT = 'Type the final answer only: 3/4, 0.75, 0,75 and x = 3 are all fine. ' +
+    'Give decimals to 3 significant figures unless the question says otherwise.';
+
   // a typed final answer: the box, a button, and Enter to submit
   function shortRow(q, given, locked, onCheck, label) {
     var row = el('div', 'short-row');
@@ -673,6 +707,9 @@
     inp.type = 'text';
     inp.autocomplete = 'off';
     inp.spellcheck = false;
+    // phones capitalise and autocorrect by default ("arg" becomes "are")
+    inp.setAttribute('autocapitalize', 'off');
+    inp.setAttribute('autocorrect', 'off');
     inp.value = given || '';
     inp.disabled = !!locked;
     row.appendChild(inp);
@@ -754,7 +791,7 @@
           inner.appendChild(verdictEl(q, cur.s === 'correct'));
           appendExplain(inner, q);
         } else {
-          inner.appendChild(el('p', 'short-hint', q.hint || 'Type the final answer only. Forms like 3/4, 0.75 and x = 3 are all fine.'));
+          inner.appendChild(el('p', 'short-hint', q.hint || SHORT_HINT));
         }
       } else {
         inner.appendChild(questionText(q, q.stem));
@@ -1513,7 +1550,7 @@
       } else if (a && ss.mode === 'exam') {
         after.appendChild(el('p', 'short-hint', 'Saved. Marks come when you submit.'));
       } else {
-        after.appendChild(el('p', 'short-hint', q.hint || 'Type the final answer only. Forms like 3/4, 0.75 and x = 3 are all fine.'));
+        after.appendChild(el('p', 'short-hint', q.hint || SHORT_HINT));
       }
     } else {
       var opts = el('div', 'opts');

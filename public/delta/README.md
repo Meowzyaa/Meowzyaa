@@ -59,8 +59,11 @@ Add objects to a file in `data/tasks/` (a new file needs a `<script>` line in `i
 ```
 
 - `kind: 'short'`: `accept` lists every accepted form. Answers are compared after removing
-  spaces, a leading label such as `x =`, and differences like `−` or `-`, `≤` or `<=`, `pi` or
-  `π`, `²` or `^2`. Add `set: true` for several values in any order ("x = 0 or x = 1").
+  spaces, a leading label such as `x =` and a unit such as `cm²`, and differences like `−` or
+  `-`, `≤` or `<=`, `pi` or `π`, `²` or `^2`, `½` or `1/2`, `2.50` or `2.5`, `;` or `,`. A comma
+  between two digits is also tried as a decimal comma (`0,5`). Add `set: true` for several
+  values in any order ("x = 0 or x = 1"). Add `awrt: true` when the key is a rounded decimal:
+  a longer value that rounds to a decimal key is then accepted too (0.23347 for 0.233).
 - `kind: 'mcq'`: `options` A to D and the `answer` letter. Build the wrong options from real
   mistakes.
 - `kind: 'structured'`: `body` with the parts and their marks in brackets, and a `scheme` whose

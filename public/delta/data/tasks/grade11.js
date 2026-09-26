@@ -3,7 +3,8 @@
 
    Each task:  id, topic, paper (the style it follows: 1, 2 or 3), n (order),
    kind: 'short'      typed answer, marked against `accept` (set: true for
-                      answers with several values, in any order), shown as `show`
+                      answers with several values, in any order; awrt: true when
+                      the key is a rounded decimal), shown as `show`
          'mcq'        options A-D and the `answer` letter
          'structured' `body` with parts; self marked against `scheme`
    marks, stem, scheme ([{ part, text }] in M1/A1/B1 style), why (worked solution).
@@ -487,7 +488,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g11-calc3-4', topic: 'calculus-3', paper: 1, n: 4, kind: 'short', marks: 3,
   stem: 'Find the area of the region enclosed between the curve y = x² and the line y = 2x.',
-  label: 'Area =', accept: ['4/3', '1.33', '1.333'], show: '4/3',
+  label: 'Area =', accept: ['4/3', '1.33', '1.333'], awrt: true, show: '4/3',
   scheme: [
     { part: 'M1', text: 'intersections at x = 0 and x = 2' },
     { part: 'M1', text: '∫_{0}^{2} (2x − x²) dx' },

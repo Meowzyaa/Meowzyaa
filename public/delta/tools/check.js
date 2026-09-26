@@ -23,6 +23,7 @@ Q.forEach(function (q) {
   if (q.kind === 'short') {
     if (!q.accept || !q.show) bad.push('short fields ' + q.id);
     q.accept.forEach(function (a) { if (!checkShort(q, a)) bad.push('accept fails ' + q.id + ' ' + a); });
+    if (q.awrt && !q.accept.some(function (a) { return /^-?\d+\.\d+$/.test(a); })) bad.push('awrt without a decimal key ' + q.id);
   } else if (q.kind === 'mcq') {
     if (!q.options || !q.options[q.answer]) bad.push('mcq ' + q.id);
   } else if (q.kind === 'structured') {
@@ -53,12 +54,35 @@ var tries = [
   ['g12-num-2', '[2, 2.25]', true], ['g12-num-2', '2 ≤ x ≤ 2.25', true], ['g12-num-2', '[2, 2.5]', false],
   ['g12-con-3', '(3, 0)', true], ['g12-con-3', '(3; 0)', true], ['g12-ser-4', '1 − x − x²/2', true], ['g12-ser-4', '1-x-0.5x^2', true],
   ['g12-hyp-3', '(51.32, 53.28)', true], ['g12-vol-1', '12 pi', true], ['g12-vol-4', '8π', true], ['g12-de-3', 'y = x', true],
-  ['g12-de-1', '3e', true], ['g12-norm-4', 'h = 180.3', true], ['g12-norm-4', '159.7', false]
+  ['g12-de-1', '3e', true], ['g12-norm-4', 'h = 180.3', true], ['g12-norm-4', '159.7', false],
+  // decimal commas, the way most students here write decimals; a set still splits on them
+  ['g11-eq-3', '0,5', true], ['g12-hyp-1', 's² = 2,5', true], ['g12-rv-1', '2,7', true], ['g12-bp-7', 'e^-3,5', true],
+  ['g12-hyp-3', '(51,32; 53,28)', true], ['g11-roots-5', '[0,5; 5)', true], ['g11-eq-2', '(−2; 4)', true],
+  ['g11-exp-4', '0,1', true], ['g11-exp-4', '0,5', false], ['g11-exp-3', '3,4', false],
+  // units after the value, as the answers themselves are shown
+  ['g11-solid-2', '24π cm²', true], ['g11-solid-2', '24 pi cm^2', true], ['g12-vol-2', '48 cm³', true], ['g12-vol-1', '12π cm3', true],
+  ['g12-norm-4', '180.3 cm', true], ['g12-app-2', '0.159 cm/s', true], ['g12-app-1', 't = 1 s and t = 3 s', true],
+  // the label printed next to the box, typed back, and phone keyboards
+  ['g11-vec-2', 'a · b = 1', true], ['g11-vec-3', 'a × b = (6, −3, 1)', true], ['g11-calc2-1', 'f’(2) = −3', true],
+  ['g12-rv-2', 'Var(2X + 5) = 8', true], ['g12-app-4', 'δy ~ 0.12', true], ['g11-exp-4', 'x₁ = 0, x₂ = 1', true],
+  // other ways of writing the same number or set
+  ['g11-eq-3', '½', true], ['g12-ser-4', '1 − x − ½x²', true], ['g12-rv-1', '2.70', true], ['g12-prob-3', '.5', true],
+  ['g11-exp-4', '{0, 1}', true], ['g11-exp-4', 'x = 0 или x = 1', true], ['g11-eq-4', 'pi/6 or 5pi/6', true],
+  // awrt tasks take a longer calculator value that rounds to the key, and only those tasks
+  ['g12-bp-1', '0.23347', true], ['g12-norm-1', '0.93319', true], ['g12-rv-3', '0.1111', true], ['g11-calc3-4', '1.3333', true],
+  ['g12-num-3', '2.09455', true], ['g12-norm-4', '180.2524', true], ['g12-app-2', '0.15915', true], ['g12-prob-5', '0,11574', true],
+  ['g12-bp-1', '0.2339', false], ['g12-num-3', '2.0944', false], ['g12-norm-4', '180.24', false], ['g12-rv-1', '2.70001', false],
+  // near misses stay wrong
+  ['g12-norm-2', '0.774', false], ['g12-app-2', '0.16', false], ['g12-rv-1', '2.74', false], ['g11-exp-3', '3.4', false]
 ];
-// every short answer's own `show` text must be accepted too
-Q.forEach(function (q) { if (q.kind === 'short' && !checkShort(q, q.show.replace(/\s*(cm³|cm²|cm|cm per second|m per minute)$/, '').replace(/ ≈ .*$/, ''))) bad.push('show not accepted ' + q.id + ' "' + q.show + '"'); });
+// every short answer's own `show` text must be accepted too (units and all)
+Q.forEach(function (q) { if (q.kind === 'short' && !checkShort(q, q.show.replace(/ ≈ .*$/, ''))) bad.push('show not accepted ' + q.id + ' "' + q.show + '"'); });
 var byId = {}; Q.forEach(function (q) { byId[q.id] = q; });
 tries.forEach(function (t) { var got = checkShort(byId[t[0]], t[1]); if (got !== t[2]) bad.push('typing ' + t[0] + ' "' + t[1] + '" -> ' + got); });
+// "pi" and "or" count only as words
+[['2pi', false, '2π'], ['spin', false, 'spin'], ['x = 1 for n = 2', true, '1forn=2']].forEach(function (t) {
+  var got = normAnswer(t[0], t[1]); if (got !== t[2]) bad.push('normAnswer "' + t[0] + '" -> ' + got);
+});
 var refs = window.DELTA_REFERENCE; refs.forEach(function (r) { if (!T[r.topic]) bad.push('ref topic ' + r.id); });
 print('tasks ' + Q.length + ' ' + JSON.stringify(kinds));
 print('per topic ' + JSON.stringify(per));
