@@ -59,6 +59,13 @@
         v.examDate = v.examDate || null;
         v.session = v.session || null;
         v.builder = v.builder || null;
+        // a saved set can name a task that has since been renamed or removed
+        if (v.session) {
+          v.session.ids = (v.session.ids || []).filter(function (id) { return QBY[id]; });
+          Object.keys(v.session.ans || {}).forEach(function (id) { if (!QBY[id]) delete v.session.ans[id]; });
+          if (!v.session.ids.length) v.session = null;
+          else v.session.i = Math.min(v.session.i || 0, v.session.ids.length - 1);
+        }
         if (!v.days) {
           // older saves only kept the latest answer per question; that is still
           // enough to rebuild a rough activity history for the streak
