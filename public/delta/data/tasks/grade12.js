@@ -238,9 +238,9 @@ DELTA_QUESTIONS.push(
   body: 'The masses of eggs from a farm are modelled by a normal distribution. 10% of the eggs weigh less than 40 g and 5% weigh more than 60 g.\n\n(a) Find the mean μ and the standard deviation σ of the masses. [5]\n(b) Find the proportion of eggs that weigh more than 50 g. [2]',
   scheme: [
     { part: '(a)', text: 'z-values −1.282 and 1.645  B1 B1\n(40 − μ)/σ = −1.282 and (60 − μ)/σ = 1.645  M1\nsubtracting: 20 = 2.927σ, so σ = 6.83  A1\nμ = 48.8  A1' },
-    { part: '(b)', text: 'z = (50 − 48.76)/6.833 = 0.18  M1\n1 − Φ(0.18) = 0.428 (accept 0.429)  A1' }
+    { part: '(b)', text: 'z = (50 − 48.76)/6.833 = 0.181  M1\n1 − Φ(0.181) = 0.428 (accept 0.429, from Φ(0.18) in the table)  A1' }
   ],
-  why: '(a) 10% below 40 g: Φ(z) = 0.1 gives z = −1.282, so 40 is 1.282σ below the mean. 5% above 60 g: z = 1.645, so 60 is 1.645σ above it. Subtracting 40 = μ − 1.282σ from 60 = μ + 1.645σ gives 20 = 2.927σ, so σ = 6.833 g, and μ = 40 + 1.282 × 6.833 = 48.76 g.\n(b) z = (50 − 48.76)/6.833 = 0.18, and 1 − Φ(0.18) ≈ 0.428: about 43% of the eggs.'
+  why: '(a) 10% below 40 g: Φ(z) = 0.1 gives z = −1.282, so 40 is 1.282σ below the mean. 5% above 60 g: z = 1.645, so 60 is 1.645σ above it. Subtracting 40 = μ − 1.282σ from 60 = μ + 1.645σ gives 20 = 2.927σ, so σ = 6.833 g, and μ = 40 + 1.282 × 6.833 = 48.76 g.\n(b) z = (50 − 48.76)/6.833 = 0.181, and 1 − Φ(0.181) = 0.428: about 43% of the eggs. Rounding z to 0.18 first and reading Φ(0.18) = 0.5714 from the table gives 0.429, which is also fine.'
 },
 {
   id: 'g12-norm-6', topic: 'normal', paper: 3, n: 6, kind: 'structured', marks: 7,
