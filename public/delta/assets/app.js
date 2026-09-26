@@ -2358,9 +2358,11 @@
     void main.offsetWidth;
     main.classList.add('enter');
 
+    // any page but the session turns the session's keys off, so A to D on the
+    // home or a topic page cannot answer a question that is not on screen
+    if (parts[0] !== 'session') { stopClock(); SESS_KEYS = null; }
     if (!parts.length) return viewHome();
     if (parts[0] === 'topic') return viewTopic(parts[1]);
-    if (parts[0] !== 'session') { stopClock(); SESS_KEYS = null; }
     if (parts[0] === 'drill') return viewDrill(parts[1] || 'all');
     if (parts[0] === 'session') return viewSession();
     if (parts[0] === 'practice') return viewPractice(parts[1]);
