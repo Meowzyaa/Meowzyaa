@@ -41,6 +41,7 @@ assets/style.css    chemprep's styles plus the AI tag, matrices and the answer b
 data/topics.js      the units
 data/tasks/*.js     the tasks: grade11.js and grade12.js
 data/reference.js   the reference
+tools/check.js      checks every task and the reference (see the top of the file)
 ```
 
 ## Adding tasks
@@ -66,3 +67,6 @@ Add objects to a file in `data/tasks/` (a new file needs a `<script>` line in `i
   codes add up to `marks`.
 
 Progress is stored in `localStorage` under `delta.v1`, separate from chemprep's.
+
+After changing tasks, run `tools/check.js` with JavaScriptCore's `jsc` from this folder
+(there is no node on the machine this was built on). It should print `all checks pass`.
