@@ -277,15 +277,11 @@
     return wrap;
   }
 
-  // A flattened diagram leaves a trail of stranded letters. Fine inside the
-  // full question, useless in a one-line preview.
+  // The one-line preview of a task. chemprep also stripped letters stranded by
+  // flattened diagrams here; in maths, "x up to" is real text, so that step is gone.
   function preview(q, limit) {
     limit = limit || 190;
-    var s = splitFigureText(String(q.stem || '')).prose
-      .replace(/(?:(?:^|[\s│])[A-Za-z]{1,2}(?=[\s│]|$)){3,}/g, ' … ')
-      .replace(/\s*…\s*(…\s*)+/g, ' … ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    var s = String(q.stem || '').replace(/\s{2,}/g, ' ').trim();
     if (s.length <= limit) return s;
     var cut = s.slice(0, limit);
     var sp = cut.lastIndexOf(' ');
@@ -351,8 +347,12 @@
 
   var SUPERS = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-' };
 
-  // drops a leading "x =", "a =", "f′(2) =" so the bare value is compared
-  function dropLabel(t) { return t.replace(/^[a-zα-ω][a-z0-9'′″()]*=/, ''); }
+  // drops a leading label so the bare value is compared: "x =", "f′(2) =",
+  // "dr/dt =", "s^2 =", "δy ≈", "p(x=2) =", "|z| ="
+  function dropLabel(t) {
+    return t.replace(/^p\([^)]*\)[=≈]/, '').replace(/^\|[a-z]\|[=≈]/, '')
+      .replace(/^[a-zα-ω][a-z0-9'′″()\/^]*[=≈]/, '');
+  }
 
   // One spelling for the many ways the same answer gets typed: spaces,
   // superscripts, the three kinds of minus, ≤ and <=, pi and π, degree signs.
@@ -701,18 +701,6 @@
     return det;
   }
 
-  function workPad(q) {
-    var ta = el('textarea', 'work');
-    ta.placeholder = 'Work it out here. Saved on this device only.';
-    ta.value = S.notes[q.id] || '';
-    ta.addEventListener('input', function () {
-      S.notes[q.id] = ta.value;
-      if (!ta.value) delete S.notes[q.id];
-      save();
-    });
-    return ta;
-  }
-
   function questionCard(q, opts) {
     opts = opts || {};
     var r = result(q.id);
@@ -747,8 +735,9 @@
 
       if (q.kind === 'structured') {
         inner.appendChild(questionText(q, q.body || q.stem));
-        inner.appendChild(workPad(q));
-        inner.appendChild(el('p', 'note', 'Work it out first, then reveal the mark scheme and score yourself honestly.'));
+        // no typing area for working: nobody can check who wrote it, so the
+        // task is answered on paper and marked against the scheme
+        inner.appendChild(el('p', 'note', 'Work it out on paper first, then reveal the mark scheme and score yourself honestly.'));
         appendExplain(inner, q);
         inner.appendChild(selfMarkRow(q, opts.onAnswer));
       } else if (q.kind === 'short') {
@@ -885,7 +874,6 @@
         inner.appendChild(wrap);
         if (cur) inner.appendChild(reveal());
       } else {
-        inner.appendChild(workPad(p));
         var det = el('details', 'scheme');
         det.innerHTML = '<summary>Reveal the mark scheme</summary><div class="scheme-body">' +
           p.scheme.map(function (s, i) {
@@ -1491,7 +1479,7 @@
     var after = el('div', 'sess-after');
 
     if (q.kind === 'structured') {
-      card.appendChild(workPad(q));
+      card.appendChild(el('p', 'note', 'Work it out on paper first, then reveal the mark scheme and score yourself honestly.'));
       var sb = schemeBlock(q);
       if (sb) card.appendChild(sb);
       var wb = solutionBlock(q);
