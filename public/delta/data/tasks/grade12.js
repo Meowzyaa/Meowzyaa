@@ -38,7 +38,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-prob-5', topic: 'probability', paper: 1, n: 5, kind: 'short', marks: 2,
   stem: 'A fair die is rolled 4 times. Find the probability of getting exactly two sixes.',
-  label: 'Answer', accept: ['25/216', '150/1296', '0.116', '0.1157'], show: '25/216',
+  label: 'Answer', accept: ['25/216', '150/1296', '0.116', '0.1157'], awrt: true, show: '25/216',
   scheme: [{ part: 'M1', text: '⁴C₂ (1/6)² (5/6)²' }, { part: 'A1', text: '6 × 25/1296 = 25/216' }],
   why: 'Each roll is a trial with P(six) = 1/6. One particular order, such as six, six, other, other, has probability (1/6)²(5/6)² = 25/1296. There are ⁴C₂ = 6 orders, so the answer is 150/1296 = 25/216 ≈ 0.116.'
 },
@@ -88,7 +88,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-rv-3', topic: 'random-vars', paper: 1, n: 3, kind: 'short', marks: 2,
   stem: 'The continuous random variable X has probability density function f(x) = kx² for 0 ≤ x ≤ 3, and f(x) = 0 otherwise. Find k.',
-  label: 'k =', accept: ['1/9', '0.111'], show: '1/9',
+  label: 'k =', accept: ['1/9', '0.111'], awrt: true, show: '1/9',
   scheme: [{ part: 'M1', text: '∫_{0}^{3} kx² dx = 1' }, { part: 'A1', text: '9k = 1, so k = 1/9' }],
   why: 'The total probability is the area under f, which must be 1: ∫_{0}^{3} kx² dx = k[x³/3]_{0}^{3} = 9k, and 9k = 1 gives k = 1/9.'
 },
@@ -127,7 +127,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-bp-1', topic: 'binomial-poisson', paper: 2, n: 1, kind: 'short', marks: 2,
   stem: 'X ~ B(10, 0.3). Find P(X = 2), correct to 3 significant figures.',
-  label: 'P(X = 2) =', accept: ['0.233', '0.2335'], show: '0.233',
+  label: 'P(X = 2) =', accept: ['0.233', '0.2335'], awrt: true, show: '0.233',
   scheme: [{ part: 'M1', text: '¹⁰C₂ (0.3)² (0.7)⁸' }, { part: 'A1', text: '0.233' }],
   why: '¹⁰C₂ = 45, (0.3)² = 0.09 and (0.7)⁸ = 0.05765, so P(X = 2) = 45 × 0.09 × 0.05765 = 0.2335 ≈ 0.233. From cumulative tables: P(X ≤ 2) − P(X ≤ 1) = 0.3828 − 0.1493 = 0.2335.'
 },
@@ -145,7 +145,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-bp-3', topic: 'binomial-poisson', paper: 2, n: 3, kind: 'short', marks: 3,
   stem: 'Calls reach a helpline at random, at an average rate of 3 every 10 minutes. Find the probability of exactly 2 calls in a 5-minute period, to 3 significant figures.',
-  label: 'Answer', accept: ['0.251', '0.2510'], show: '0.251',
+  label: 'Answer', accept: ['0.251'], awrt: true, show: '0.251',
   scheme: [
     { part: 'B1', text: 'λ = 1.5 for 5 minutes' },
     { part: 'M1', text: 'e^{−1.5} × 1.5²/2!' },
@@ -200,14 +200,14 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-norm-1', topic: 'normal', paper: 2, n: 1, kind: 'short', marks: 2,
   stem: 'X ~ N(50, 16). Find P(X < 56).',
-  label: 'Answer', accept: ['0.9332', '0.933'], show: '0.9332',
+  label: 'Answer', accept: ['0.9332', '0.933'], awrt: true, show: '0.9332',
   scheme: [{ part: 'M1', text: 'standardises: z = (56 − 50)/4 = 1.5' }, { part: 'A1', text: 'Φ(1.5) = 0.9332' }],
   why: 'N(50, 16) means the variance is 16, so σ = 4. z = 6/4 = 1.5, and the table gives Φ(1.5) = 0.9332. Dividing by 16 instead of 4 gives z = 0.375, the most common slip.'
 },
 {
   id: 'g12-norm-2', topic: 'normal', paper: 2, n: 2, kind: 'short', marks: 3,
   stem: 'X ~ N(50, 16). Find P(46 < X < 56).',
-  label: 'Answer', accept: ['0.7745', '0.775', '0.774'], show: '0.7745',
+  label: 'Answer', accept: ['0.7745', '0.775'], awrt: true, show: '0.7745',
   scheme: [
     { part: 'M1', text: 'z-values −1 and 1.5' },
     { part: 'M1', text: 'Φ(1.5) − Φ(−1), with Φ(−1) = 1 − Φ(1)' },
@@ -224,7 +224,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-norm-4', topic: 'normal', paper: 2, n: 4, kind: 'short', marks: 3,
   stem: 'The heights of adults in a town are modelled as N(170, 8²), in cm. Find the height exceeded by the tallest 10%, to 1 decimal place.',
-  label: 'h =', accept: ['180.3', '180.25', '180.26'], show: '180.3 cm',
+  label: 'h =', accept: ['180.3', '180.25', '180.26'], awrt: true, show: '180.3 cm',
   scheme: [
     { part: 'B1', text: 'z = 1.282, from Φ(z) = 0.9' },
     { part: 'M1', text: '(h − 170)/8 = 1.282' },
@@ -575,7 +575,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-num-3', topic: 'numerical', paper: 2, n: 3, kind: 'short', marks: 3,
   stem: 'Use the iteration x_{n+1} = ∛(2x_{n} + 5), with x_{1} = 2, to find a root of x³ − 2x − 5 = 0 correct to 3 decimal places.',
-  label: 'x =', accept: ['2.095'], show: '2.095',
+  label: 'x =', accept: ['2.095'], awrt: true, show: '2.095',
   scheme: [
     { part: 'M1', text: 'x₂ = ∛9 = 2.0801' },
     { part: 'M1', text: 'continues: 2.0924, 2.0942, 2.0945, 2.0945' },
@@ -688,7 +688,7 @@ DELTA_QUESTIONS.push(
 {
   id: 'g12-app-2', topic: 'applied-calc', paper: 1, n: 2, kind: 'short', marks: 3,
   stem: 'A spherical balloon is inflated at a constant rate of 50 cm³ per second. Find the rate at which its radius is increasing when the radius is 5 cm.',
-  label: 'dr/dt =', accept: ['1/(2π)', '1/2π', '0.159', '0.1592', '0.16'], show: '1/(2π) ≈ 0.159 cm per second',
+  label: 'dr/dt =', accept: ['1/(2π)', '1/2π', '0.159', '0.1592'], awrt: true, show: '1/(2π) ≈ 0.159 cm per second',
   scheme: [
     { part: 'B1', text: 'dV/dr = 4πr²' },
     { part: 'M1', text: 'dr/dt = (dV/dt) ÷ (dV/dr) = 50/(4π × 25)' },
