@@ -51,8 +51,9 @@
     return out + inline(escapeHtml(s.slice(last)));
   }
 
+  // for toasts and search: x^{2} -> x^2, a_{n} -> a_n
   function plain(text) {
-    return String(text == null ? '' : text).toLowerCase();
+    return String(text == null ? '' : text).replace(/([\^_])\{([^{}]*)\}/g, '$1$2').toLowerCase();
   }
 
   // chemprep splits chart numbers out of past paper text; tasks here are

@@ -15,8 +15,11 @@ possible, which is why every task has a report link.
 
 ## What it covers
 
-- **Units** from the long-term plans of the NIS mathematics course (10-hour programme):
-  grade 11 so far, in `data/topics.js`, grouped into algebra, calculus, geometry and statistics.
+- **Units** of the NIS mathematics course (10-hour programme) in `data/topics.js`, grouped
+  into algebra, calculus, geometry and statistics. The 10 grade 11 units follow the grade 11
+  long-term plan and keep its codes (11.1A …). The 12 grade 12 units follow the order the
+  grade 12 course teaches its topics, and are coded by grade and term (12.1 = term 1) until
+  they are matched to the official grade 12 plan.
 - **Tasks** in the style of the three papers, tagged P1, P2 or P3:
   - P1: 80 minutes, 25–30 short questions, no calculator, 60 marks.
   - P2: 120 minutes, about 12 longer questions, calculator, 90 marks.
@@ -36,7 +39,7 @@ assets/app.js       chemprep's engine, adapted: typed answers, P1-P3 tags, the e
 assets/maths.js     formats task text: x^{n}, a_{n} and [[1, 2], [3, 4]] matrices
 assets/style.css    chemprep's styles plus the AI tag, matrices and the answer box
 data/topics.js      the units
-data/tasks/*.js     the tasks, one file per grade
+data/tasks/*.js     the tasks: grade11.js and grade12.js
 data/reference.js   the reference
 ```
 
