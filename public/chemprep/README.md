@@ -41,7 +41,8 @@ and answer it. No build step, no dependencies, no backend.
 - **A first-run tour.** Five short cards explaining the modes, marking, missing diagrams and the
   shortcuts. Skippable, and reopened with `?` or the help button.
 - **Export and import.** Progress lives in `localStorage`, so the sidebar can save it to a file and
-  load it on another device.
+  load it on another device. Loading keeps whichever answer is newer, question by question, and
+  refuses files from other apps.
 - **The real diagrams.** 25 Paper 1 questions carry the actual figure, cropped straight out of
   the source PDF, so a graph or a mechanism question reads as a whole question instead of prose
   with a hole in it.

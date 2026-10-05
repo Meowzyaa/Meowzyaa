@@ -18,6 +18,10 @@
   var PBY_GOAL = {};
   PRACTICE.forEach(function (p) { (PBY_GOAL[p.goal] = PBY_GOAL[p.goal] || []).push(p); });
 
+  // ids progress can be kept under: past paper questions and written practice
+  var KNOWN = {};
+  QS.concat(PRACTICE).forEach(function (q) { KNOWN[q.id] = 1; });
+
   var GOAL_BY_CODE = {};
   GOALS.forEach(function (g) {
     GOAL_BY_CODE[g.code] = g;
@@ -57,6 +61,14 @@
         v.examDate = v.examDate || null;
         v.session = v.session || null;
         v.builder = v.builder || null;
+        // a saved set can name a question that a rebuild of the bank has since
+        // renamed or removed
+        if (v.session) {
+          v.session.ids = (v.session.ids || []).filter(function (id) { return QBY[id]; });
+          Object.keys(v.session.ans || {}).forEach(function (id) { if (!QBY[id]) delete v.session.ans[id]; });
+          if (!v.session.ids.length) v.session = null;
+          else v.session.i = Math.min(v.session.i || 0, v.session.ids.length - 1);
+        }
         if (!v.days) {
           // older saves only kept the latest answer per question; that is still
           // enough to rebuild a rough activity history for the streak
@@ -2279,9 +2291,11 @@
     void main.offsetWidth;
     main.classList.add('enter');
 
+    // any page but the session turns the session's keys off, so A to D on the
+    // home or a topic page cannot answer a question that is not on screen
+    if (parts[0] !== 'session') { stopClock(); SESS_KEYS = null; }
     if (!parts.length) return viewHome();
     if (parts[0] === 'topic') return viewTopic(parts[1]);
-    if (parts[0] !== 'session') { stopClock(); SESS_KEYS = null; }
     if (parts[0] === 'drill') return viewDrill(parts[1] || 'all');
     if (parts[0] === 'session') return viewSession();
     if (parts[0] === 'practice') return viewPractice(parts[1]);
@@ -2573,7 +2587,7 @@
   // progress lives in this browser only, so a file is the way to carry it to
   // another device or keep it safe
   $('#export-btn').addEventListener('click', function () {
-    var blob = new Blob([JSON.stringify({ results: S.results, notes: S.notes, flags: S.flags, srs: S.srs, days: S.days, exported: new Date().toISOString() }, null, 1)],
+    var blob = new Blob([JSON.stringify({ app: 'chemprep', results: S.results, notes: S.notes, flags: S.flags, srs: S.srs, days: S.days, exported: new Date().toISOString() }, null, 1)],
       { type: 'application/json' });
     var a = el('a');
     a.href = URL.createObjectURL(blob);
@@ -2593,16 +2607,27 @@
     reader.onload = function () {
       try {
         var v = JSON.parse(reader.result);
-        if (!v || typeof v.results !== 'object') throw new Error('shape');
-        Object.keys(v.results || {}).forEach(function (k) { S.results[k] = v.results[k]; });
-        Object.keys(v.notes || {}).forEach(function (k) { S.notes[k] = v.notes[k]; });
-        Object.keys(v.flags || {}).forEach(function (k) { S.flags[k] = v.flags[k]; });
-        Object.keys(v.srs || {}).forEach(function (k) { S.srs[k] = v.srs[k]; });
+        var ids = v && v.results && typeof v.results === 'object' ? Object.keys(v.results) : null;
+        // delta saves the same shape, so make sure the file is chemprep's: newer
+        // exports say so, older ones must name at least one chemprep question
+        if (!ids || (v.app ? v.app !== 'chemprep' : ids.length && !ids.some(function (k) { return KNOWN[k]; }))) throw new Error('shape');
+        // question by question, the newer answer wins and brings its review
+        // schedule, so an old file cannot undo work done since it was saved
+        var taken = 0;
+        ids.forEach(function (k) {
+          var mine = S.results[k], theirs = v.results[k];
+          if (!KNOWN[k] || !theirs || (mine && mine.at >= theirs.at)) return;
+          S.results[k] = theirs;
+          if (v.srs && v.srs[k]) S.srs[k] = v.srs[k]; else delete S.srs[k];
+          taken++;
+        });
+        Object.keys(v.notes || {}).forEach(function (k) { if (KNOWN[k]) S.notes[k] = v.notes[k]; });
+        Object.keys(v.flags || {}).forEach(function (k) { if (KNOWN[k]) S.flags[k] = v.flags[k]; });
         Object.keys(v.days || {}).forEach(function (k) { S.days[k] = Math.max(S.days[k] || 0, v.days[k]); });
         save();
         refreshChrome();
         route();
-        toast('progress imported');
+        toast(taken ? 'progress imported, ' + taken + ' newer answer' + (taken === 1 ? '' : 's') : 'imported; nothing in it is newer than what is here');
       } catch (e) {
         toast('that file is not a chemprep export');
       }
