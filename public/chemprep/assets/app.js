@@ -2103,6 +2103,7 @@
           '<li><b>Extraction is not perfect.</b> Questions were pulled out of PDFs automatically, so a formula, a diagram or a topic ' +
             'label can occasionally be wrong. If you spot one, please say so.</li>' +
           '<li><b>Your progress stays with you.</b> It lives in this browser only. Use export in the sidebar to move it to another device.</li>' +
+          '<li><b>Visits are counted anonymously.</b> GoatCounter records which pages are opened, with no cookies and no IP address. Your answers, progress and searches are never sent.</li>' +
         '</ul>' +
       '</section>';
     main.appendChild(body);
@@ -2669,6 +2670,22 @@
   refreshChrome();
   window.addEventListener('hashchange', route);
   route();
+
+  // Anonymous visit counts (GoatCounter, no cookies). Only the page path is
+  // sent. Search text is dropped, so nothing a student types leaves the browser.
+  function trackPath() {
+    var parts = (location.hash.replace(/^#/, '') || '/').split('/').filter(Boolean);
+    if (parts[0] === 'search') parts = ['search'];
+    return '/chemprep/#/' + parts.join('/');
+  }
+  function track() {
+    var gc = window.goatcounter;
+    if (gc && gc.count) gc.count({ path: trackPath() });
+  }
+  window.addEventListener('hashchange', track);
+  // count.js loads async after this file, so the first view is sent once the page has loaded
+  if (window.goatcounter && window.goatcounter.count) track();
+  else window.addEventListener('load', track);
   // The tour shows itself once. It is marked seen the moment it opens, and it
   // never opens on its own where nothing can be remembered (private windows),
   // so it cannot come back on every visit.

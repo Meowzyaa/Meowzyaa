@@ -51,6 +51,8 @@ and answer it. No build step, no dependencies, no backend.
 - **Deep links into the source.** Every question knows which PDF and which page it came from.
 
 Progress lives in `localStorage`, so it is per browser and never leaves the machine.
+The only thing sent anywhere is an anonymous page view count to [GoatCounter](https://www.goatcounter.com)
+(no cookies, no IP stored). It sends the page path only, never answers, progress or search text.
 
 ## Running it
 
